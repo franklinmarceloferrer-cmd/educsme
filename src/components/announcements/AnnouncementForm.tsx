@@ -6,10 +6,13 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { FileUpload, FileUploadFile } from "@/components/ui/file-upload";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { announcementsApi, type Announcement } from "@/lib/supabaseApi";
+import { fileStorage } from "@/lib/fileStorage";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -29,7 +32,8 @@ interface AnnouncementFormProps {
 
 export function AnnouncementForm({ announcement, onSuccess, onCancel }: AnnouncementFormProps) {
   const { user } = useAuth();
-  
+  const [attachmentFiles, setAttachmentFiles] = useState<FileUploadFile[]>([]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -68,10 +72,55 @@ export function AnnouncementForm({ announcement, onSuccess, onCancel }: Announce
     if (!user) return;
 
     try {
+      // Upload attachments first
+      const attachments = [];
+      for (const fileItem of attachmentFiles) {
+        if (fileItem.progress === 100) continue; // Already uploaded
+
+        // Update progress
+        setAttachmentFiles(prev => prev.map(f =>
+          f.id === fileItem.id ? { ...f, progress: 1 } : f
+        ));
+
+        const uploadResult = await fileStorage.uploadFile(
+          fileItem.file,
+          {
+            bucket: 'announcements',
+            folder: user.id,
+            isPublic: false
+          },
+          (progress) => {
+            setAttachmentFiles(prev => prev.map(f =>
+              f.id === fileItem.id ? { ...f, progress } : f
+            ));
+          }
+        );
+
+        if (uploadResult.success && uploadResult.data) {
+          attachments.push({
+            id: fileItem.id,
+            name: fileItem.file.name,
+            url: uploadResult.data.fullPath,
+            size: fileItem.file.size,
+            type: fileItem.file.type
+          });
+
+          // Mark as complete
+          setAttachmentFiles(prev => prev.map(f =>
+            f.id === fileItem.id ? { ...f, progress: 100 } : f
+          ));
+        } else {
+          throw new Error(uploadResult.error || 'Upload failed');
+        }
+      }
+
       if (announcement) {
         await updateMutation.mutateAsync({
           id: announcement.id,
-          data: values,
+          data: {
+            ...values,
+            attachments: [...(announcement.attachments || []), ...attachments]
+          }
         });
       } else {
         await createMutation.mutateAsync({
@@ -80,10 +129,12 @@ export function AnnouncementForm({ announcement, onSuccess, onCancel }: Announce
           category: values.category,
           priority: values.priority,
           is_published: values.is_published,
+          attachments
         });
       }
     } catch (error) {
       console.error('Error submitting form:', error);
+      toast.error('Failed to submit announcement');
     }
   };
 
@@ -158,13 +209,16 @@ export function AnnouncementForm({ announcement, onSuccess, onCancel }: Announce
             <FormItem>
               <FormLabel>Content</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Enter announcement content"
-                  className="resize-none"
-                  rows={6}
-                  {...field}
+                <RichTextEditor
+                  content={field.value}
+                  onChange={field.onChange}
+                  placeholder="Enter announcement content..."
+                  className="min-h-[200px]"
                 />
               </FormControl>
+              <FormDescription>
+                Use the toolbar to format your announcement content
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -190,6 +244,36 @@ export function AnnouncementForm({ announcement, onSuccess, onCancel }: Announce
             </FormItem>
           )}
         />
+
+        {/* File Attachments */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Attachments (Optional)</label>
+          <FileUpload
+            files={attachmentFiles}
+            onFilesSelected={(files) => {
+              const fileItems: FileUploadFile[] = files.map(file => ({
+                file,
+                id: `${Date.now()}-${Math.random()}`,
+                progress: 0,
+              }));
+              setAttachmentFiles(prev => [...prev, ...fileItems]);
+            }}
+            onFileRemove={(fileId) => {
+              setAttachmentFiles(prev => prev.filter(f => f.id !== fileId));
+            }}
+            maxFiles={3}
+            maxSize={10 * 1024 * 1024} // 10MB
+            acceptedTypes={[
+              'application/pdf',
+              'application/msword',
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+              'image/jpeg',
+              'image/png',
+              'image/gif'
+            ]}
+            disabled={createMutation.isPending || updateMutation.isPending}
+          />
+        </div>
 
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>

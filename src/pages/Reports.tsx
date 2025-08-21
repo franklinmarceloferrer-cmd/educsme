@@ -4,7 +4,7 @@ import { Download, BarChart3, Users, Megaphone, FileText, Calendar } from "lucid
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { studentsApi, announcementsApi, documentsApi, dashboardApi } from "@/lib/mockApi";
+import { studentsApi, announcementsApi, documentsApi, dashboardApi } from "@/lib/supabaseApi";
 import { toast } from "sonner";
 
 export default function Reports() {

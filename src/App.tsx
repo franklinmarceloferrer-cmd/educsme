@@ -15,8 +15,12 @@ import Documents from "./pages/Documents";
 import Reports from "./pages/Reports";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import { initializeStorage } from "@/lib/setupStorage";
 
 const queryClient = new QueryClient();
+
+// Initialize storage on app start
+initializeStorage().catch(console.error);
 
 // Protected Route component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {

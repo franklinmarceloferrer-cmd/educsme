@@ -1,26 +1,59 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Upload, Search, Filter, Download, FileText, Image, Archive } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Upload, Search, Filter, Download, FileText, Image, Archive, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { documentsApi } from "@/lib/mockApi";
+import { documentsApi } from "@/lib/supabaseApi";
+import { fileStorage } from "@/lib/fileStorage";
+import { DocumentUploadDialog } from "@/components/documents/DocumentUploadDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export default function Documents() {
   const { hasRole } = useAuth();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ['documents'],
     queryFn: documentsApi.getAll,
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (documentId: string) => {
+      // First get the document to find the file path
+      const document = documents?.find(d => d.id === documentId);
+      if (document) {
+        // Extract file path from URL for deletion from storage
+        const urlParts = document.file_url.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+
+        // Delete from storage (if it's a storage URL)
+        if (document.file_url.includes('supabase')) {
+          await fileStorage.deleteFile('documents', fileName);
+        }
+      }
+
+      // Delete from database
+      await documentsApi.delete(documentId);
+    },
+    onSuccess: () => {
+      toast.success('Document deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete document');
+    },
+  });
+
   const filteredDocuments = documents?.filter(doc =>
     doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     doc.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.uploadedBy.toLowerCase().includes(searchTerm.toLowerCase())
+    doc.uploaded_by.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()))
   ) || [];
 
   const getFileIcon = (type: string) => {
@@ -31,12 +64,37 @@ export default function Documents() {
 
   const getCategoryColor = (category: string) => {
     const colors = {
-      syllabus: "bg-blue-100 text-blue-800",
-      assignment: "bg-green-100 text-green-800",
-      resource: "bg-purple-100 text-purple-800",
-      form: "bg-orange-100 text-orange-800",
+      general: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+      academic: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      administrative: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      policy: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
     };
-    return colors[category as keyof typeof colors] || colors.resource;
+    return colors[category as keyof typeof colors] || colors.general;
+  };
+
+  const handleDownload = async (document: any) => {
+    try {
+      if (document.file_url.startsWith('http')) {
+        // External URL - open in new tab
+        window.open(document.file_url, '_blank');
+      } else {
+        // Supabase storage file - get signed URL
+        const signedUrl = await fileStorage.getSignedUrl('documents', document.file_url);
+        if (signedUrl) {
+          window.open(signedUrl, '_blank');
+        } else {
+          toast.error('Failed to generate download link');
+        }
+      }
+    } catch (error) {
+      toast.error('Failed to download file');
+    }
+  };
+
+  const handleDelete = (documentId: string) => {
+    if (window.confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
+      deleteMutation.mutate(documentId);
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -59,7 +117,7 @@ export default function Documents() {
           </p>
         </div>
         {canUpload && (
-          <Button>
+          <Button onClick={() => setUploadDialogOpen(true)}>
             <Upload className="h-4 w-4 mr-2" />
             Upload Document
           </Button>
@@ -115,33 +173,67 @@ export default function Documents() {
             <Card key={document.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    {getFileIcon(document.type)}
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {getFileIcon(document.file_type)}
                     <CardTitle className="text-base truncate">{document.name}</CardTitle>
                   </div>
-                  <Button variant="ghost" size="sm">
-                    <Download className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDownload(document)}
+                      title="Download"
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    {canUpload && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(document.id)}
+                        title="Delete"
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <CardDescription>
                   <div className="flex items-center gap-2 mt-2">
                     <Badge className={getCategoryColor(document.category)}>
                       {document.category}
                     </Badge>
-                    <span className="text-xs">{formatFileSize(document.size)}</span>
+                    <span className="text-xs">{formatFileSize(document.file_size || 0)}</span>
+                    {!document.is_public && (
+                      <Badge variant="outline" className="text-xs">
+                        Private
+                      </Badge>
+                    )}
                   </div>
+                  {document.description && (
+                    <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                      {document.description}
+                    </p>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm text-muted-foreground">
-                  <p>Uploaded by {document.uploadedBy}</p>
-                  <p>{new Date(document.uploadedAt).toLocaleDateString()}</p>
+                  <p>Uploaded by {document.uploaded_by}</p>
+                  <p>{new Date(document.created_at).toLocaleDateString()}</p>
                 </div>
               </CardContent>
             </Card>
           ))
         )}
       </div>
+
+      {/* Upload Dialog */}
+      <DocumentUploadDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+      />
     </div>
   );
 }

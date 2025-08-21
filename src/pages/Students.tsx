@@ -13,7 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { studentsApi, type Student } from "@/lib/mockApi";
+import { StudentAvatarUpload } from "@/components/students/StudentAvatarUpload";
+import { studentsApi, type Student } from "@/lib/supabaseApi";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 

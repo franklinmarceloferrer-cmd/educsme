@@ -16,6 +16,14 @@ export interface RecentActivity {
   type: 'announcement' | 'student' | 'document' | 'user';
 }
 
+export interface AnnouncementAttachment {
+  id: string;
+  name: string;
+  url: string;
+  size: number;
+  type: string;
+}
+
 export interface Announcement {
   id: string;
   title: string;
@@ -24,6 +32,7 @@ export interface Announcement {
   priority: 'low' | 'medium' | 'high';
   author: string;
   is_published: boolean;
+  attachments: AnnouncementAttachment[];
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +46,7 @@ export interface Student {
   section: string;
   phone?: string;
   address?: string;
+  avatar_url?: string;
   enrollment_date: string;
   status: 'active' | 'inactive' | 'graduated';
   created_at: string;
@@ -129,7 +139,8 @@ export const announcementsApi = {
         ...announcement,
         author: 'User',
         category: announcement.category as Announcement['category'],
-        priority: announcement.priority as Announcement['priority']
+        priority: announcement.priority as Announcement['priority'],
+        attachments: announcement.attachments || []
       }));
     } catch (error) {
       console.error('Error fetching announcements:', error);
@@ -283,15 +294,26 @@ export const documentsApi = {
     try {
       const { data, error } = await supabase
         .from('documents')
-        .select('*')
+        .select(`
+          *,
+          profiles!documents_uploaded_by_fkey(display_name)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       return (data || []).map((doc: any) => ({
-        ...doc,
-        uploaded_by: 'User',
-        category: doc.category as Document['category']
+        id: doc.id,
+        name: doc.name,
+        description: doc.description,
+        file_url: doc.file_url,
+        file_size: doc.file_size,
+        file_type: doc.file_type,
+        category: doc.category as Document['category'],
+        uploaded_by: doc.profiles?.display_name || 'Unknown User',
+        is_public: doc.is_public,
+        created_at: doc.created_at,
+        updated_at: doc.updated_at
       }));
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -299,26 +321,43 @@ export const documentsApi = {
     }
   },
 
-  create: async (document: Omit<Document, 'id' | 'uploaded_by' | 'created_at' | 'updated_at'>): Promise<Document> => {
+  create: async (document: Omit<Document, 'id' | 'created_at' | 'updated_at'>): Promise<Document> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
         .from('documents')
         .insert({
-          ...document,
-          uploaded_by: user.id
+          name: document.name,
+          description: document.description,
+          file_url: document.file_url,
+          file_size: document.file_size,
+          file_type: document.file_type,
+          category: document.category,
+          uploaded_by: userData.user.id,
+          is_public: document.is_public
         })
-        .select('*')
+        .select(`
+          *,
+          profiles!documents_uploaded_by_fkey(display_name)
+        `)
         .single();
 
       if (error) throw error;
 
       return {
-        ...data,
-        uploaded_by: 'User',
-        category: data.category as Document['category']
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        file_url: data.file_url,
+        file_size: data.file_size,
+        file_type: data.file_type,
+        category: data.category as Document['category'],
+        uploaded_by: data.profiles?.display_name || 'Unknown User',
+        is_public: data.is_public,
+        created_at: data.created_at,
+        updated_at: data.updated_at
       };
     } catch (error) {
       console.error('Error creating document:', error);
@@ -332,15 +371,26 @@ export const documentsApi = {
         .from('documents')
         .update(updates)
         .eq('id', id)
-        .select('*')
+        .select(`
+          *,
+          profiles!documents_uploaded_by_fkey(display_name)
+        `)
         .single();
 
       if (error) throw error;
 
       return {
-        ...data,
-        uploaded_by: 'User',
-        category: data.category as Document['category']
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        file_url: data.file_url,
+        file_size: data.file_size,
+        file_type: data.file_type,
+        category: data.category as Document['category'],
+        uploaded_by: data.profiles?.display_name || 'Unknown User',
+        is_public: data.is_public,
+        created_at: data.created_at,
+        updated_at: data.updated_at
       };
     } catch (error) {
       console.error('Error updating document:', error);
@@ -360,5 +410,6 @@ export const documentsApi = {
       console.error('Error deleting document:', error);
       throw error;
     }
-  }
+  },
+
 };

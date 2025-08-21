@@ -38,16 +38,15 @@ npm run dev
 - **State Management**: React Query + Context API
 - **Forms**: React Hook Form with Zod validation
 
-### API Integration Ready
-The mock API layer in `src/lib/mockApi.ts` demonstrates expected .NET backend endpoints:
+### Backend Integration Complete
+The application uses Supabase as the backend with full CRUD operations:
 
 ```typescript
-GET    /api/announcements
-POST   /api/announcements  
-GET    /api/students
-POST   /api/students
-GET    /api/documents
-GET    /api/dashboard/stats
+// Supabase API endpoints
+- Authentication: Supabase Auth with JWT tokens
+- Database: PostgreSQL with Row Level Security (RLS)
+- Storage: Supabase Storage for file uploads
+- Real-time: WebSocket subscriptions (planned)
 ```
 
 ## 🎯 Demo Features

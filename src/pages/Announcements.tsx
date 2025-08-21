@@ -189,9 +189,10 @@ export default function Announcements() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground line-clamp-3">
-                  {announcement.content}
-                </p>
+                <div
+                  className="text-muted-foreground line-clamp-3 prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: announcement.content }}
+                />
               </CardContent>
             </Card>
           ))
@@ -262,7 +263,10 @@ export default function Announcements() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <p className="whitespace-pre-wrap">{selectedAnnouncement?.content}</p>
+            <div
+              className="prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: selectedAnnouncement?.content || '' }}
+            />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
