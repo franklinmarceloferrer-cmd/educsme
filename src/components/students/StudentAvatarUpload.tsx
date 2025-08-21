@@ -90,7 +90,19 @@ export function StudentAvatarUpload({
       await updateMutation.mutateAsync(uploadResult.data.publicUrl || uploadResult.data.fullPath);
     } catch (error) {
       console.error('Avatar upload error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to upload avatar');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload avatar';
+
+      // Provide helpful error messages for common issues
+      if (errorMessage.includes('bucket')) {
+        toast.error('Storage not configured. Please contact administrator to set up avatar storage.');
+      } else if (errorMessage.includes('policy')) {
+        toast.error('Permission denied. You may not have permission to upload avatars.');
+      } else if (errorMessage.includes('size')) {
+        toast.error('File too large. Please choose an image smaller than 5MB.');
+      } else {
+        toast.error(errorMessage);
+      }
+
       setIsUploading(false);
       setPreviewUrl(null);
     }

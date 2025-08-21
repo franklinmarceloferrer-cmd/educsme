@@ -30,6 +30,23 @@ npm run dev
 # Visit http://localhost:5173
 ```
 
+### **⚠️ Storage Setup Required**
+
+Before using file upload features, you need to create storage buckets in Supabase:
+
+```bash
+# Check storage configuration
+npm run check-storage
+
+# Follow the setup guide if buckets are missing
+# See: docs/supabase-storage-setup.md
+```
+
+**Required Buckets:**
+- `avatars` (public) - Student profile pictures
+- `documents` (private) - Document library files
+- `announcements` (private) - Announcement attachments
+
 ### **.NET Backend Setup (Optional)**
 ```bash
 # Navigate to backend directory
