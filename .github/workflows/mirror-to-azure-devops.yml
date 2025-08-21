@@ -2,7 +2,10 @@ name: Mirror to Azure DevOps
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
+    branches:
+      - main
+      - develop
+      - 'feature/*'
   workflow_dispatch:
     inputs:
       force_sync:
