@@ -56,6 +56,7 @@ builder.Services.AddApplicationInsightsTelemetry(options =>
 });
 
 // Services Registration
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ITelemetryService, TelemetryService>();
 builder.Services.AddScoped<IWeatherService, WeatherService>();
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -32,6 +32,7 @@ interface AnnouncementFormProps {
 
 export function AnnouncementForm({ announcement, onSuccess, onCancel }: AnnouncementFormProps) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [attachmentFiles, setAttachmentFiles] = useState<FileUploadFile[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -49,6 +50,7 @@ export function AnnouncementForm({ announcement, onSuccess, onCancel }: Announce
     mutationFn: announcementsApi.create,
     onSuccess: () => {
       toast.success("Announcement created successfully");
+      queryClient.invalidateQueries({ queryKey: ['announcements'] });
       onSuccess();
     },
     onError: () => {
@@ -61,6 +63,7 @@ export function AnnouncementForm({ announcement, onSuccess, onCancel }: Announce
       announcementsApi.update(id, data),
     onSuccess: () => {
       toast.success("Announcement updated successfully");
+      queryClient.invalidateQueries({ queryKey: ['announcements'] });
       onSuccess();
     },
     onError: () => {

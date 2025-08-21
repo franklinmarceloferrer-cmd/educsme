@@ -37,12 +37,14 @@ export default function Students() {
     if (!students) return;
 
     const csvContent = [
-      ["Name", "Email", "Grade", "Enrollment Date", "Status"],
+      ["Student ID", "Name", "Email", "Grade", "Section", "Enrollment Date", "Status"],
       ...students.map(student => [
+        student.student_id,
         student.name,
         student.email,
         student.grade,
-        student.enrollmentDate,
+        student.section,
+        student.enrollment_date,
         student.status
       ])
     ].map(row => row.join(",")).join("\n");
@@ -125,9 +127,10 @@ export default function Students() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                  <TableHead>Student</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Grade</TableHead>
+                  <TableHead>Section</TableHead>
                   <TableHead>Enrollment Date</TableHead>
                   <TableHead>Status</TableHead>
                   {canManage && <TableHead>Actions</TableHead>}
@@ -136,10 +139,23 @@ export default function Students() {
               <TableBody>
                 {filteredStudents.map((student) => (
                   <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <StudentAvatarUpload
+                          student={student}
+                          size="sm"
+                          editable={canManage}
+                        />
+                        <div>
+                          <p className="font-medium">{student.name}</p>
+                          <p className="text-sm text-muted-foreground">{student.student_id}</p>
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell>{student.email}</TableCell>
                     <TableCell>{student.grade}</TableCell>
-                    <TableCell>{new Date(student.enrollmentDate).toLocaleDateString()}</TableCell>
+                    <TableCell>{student.section}</TableCell>
+                    <TableCell>{new Date(student.enrollment_date).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <Badge variant={student.status === 'active' ? 'default' : 'secondary'}>
                         {student.status}
