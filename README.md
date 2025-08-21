@@ -1,73 +1,72 @@
-# Welcome to your Lovable project
+# 🎓 EduCMS - Educational Content Management System
 
-## Project info
+A modern React-based Educational CMS demonstrating full-stack development patterns, API-ready architecture, and professional UI/UX design.
 
-**URL**: https://lovable.dev/projects/9492e6e1-1d65-4f7e-bd00-19317808001d
+## ✨ Features
 
-## How can I edit this code?
+### 🎯 Core Functionality
+- **Dashboard Analytics** - Real-time statistics and activity monitoring
+- **Announcements Management** - Complete CRUD operations with categories
+- **Student Directory** - User management with role-based permissions  
+- **Document Library** - File management with categorization
+- **Reports Generation** - Export capabilities (CSV, Print-ready)
 
-There are several ways of editing your application.
+### 🎨 Modern UI/UX
+- **Responsive Design** - Mobile-first approach with Tailwind CSS
+- **Dark/Light Theme** - System preference detection with manual toggle
+- **Professional Components** - Radix UI primitives with custom styling
+- **Role-Based Access** - Admin, Teacher, Student permission levels
 
-**Use Lovable**
+## 🚀 Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/9492e6e1-1d65-4f7e-bd00-19317808001d) and start prompting.
+```bash
+# Install dependencies
+npm install
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
+
+# Visit http://localhost:5173
 ```
 
-**Edit a file directly in GitHub**
+## 🏗️ Architecture
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Tech Stack
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS with design system tokens
+- **UI Components**: Radix UI primitives with shadcn/ui
+- **State Management**: React Query + Context API
+- **Forms**: React Hook Form with Zod validation
 
-**Use GitHub Codespaces**
+### API Integration Ready
+The mock API layer in `src/lib/mockApi.ts` demonstrates expected .NET backend endpoints:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```typescript
+GET    /api/announcements
+POST   /api/announcements  
+GET    /api/students
+POST   /api/students
+GET    /api/documents
+GET    /api/dashboard/stats
+```
 
-## What technologies are used for this project?
+## 🎯 Demo Features
 
-This project is built with:
+### Role Switching
+Click user profile in sidebar to switch between:
+- **Admin**: Full access to all features
+- **Teacher**: Can manage announcements and documents  
+- **Student**: Read-only access to content
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Export Functionality
+- CSV export for student reports
+- Print-friendly report layouts
+- Session data persistence
 
-## How can I deploy this project?
+## 🔌 .NET Backend Integration
 
-Simply open [Lovable](https://lovable.dev/projects/9492e6e1-1d65-4f7e-bd00-19317808001d) and click on Share -> Publish.
+Replace mock API calls with actual HTTP requests to your ASP.NET endpoints. The component structure and state management will remain the same.
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+**Portfolio Project**: Demonstrates modern React patterns and prepares for .NET backend integration.
