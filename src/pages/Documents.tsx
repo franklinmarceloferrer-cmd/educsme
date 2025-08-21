@@ -72,7 +72,7 @@ export default function Documents() {
     return colors[category as keyof typeof colors] || colors.general;
   };
 
-  const handleDownload = async (document: any) => {
+  const handleDownload = async (document: Document) => {
     try {
       if (document.file_url.startsWith('http')) {
         // External URL - open in new tab

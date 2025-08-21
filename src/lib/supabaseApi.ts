@@ -106,7 +106,7 @@ export const dashboardApi = {
 
       const activities: RecentActivity[] = [];
 
-      announcements?.forEach((announcement: any) => {
+      announcements?.forEach((announcement: Announcement) => {
         activities.push({
           id: announcement.id,
           action: `Created announcement "${announcement.title}"`,
@@ -135,7 +135,7 @@ export const announcementsApi = {
 
       if (error) throw error;
 
-      return (data || []).map((announcement: any) => ({
+      return (data || []).map((announcement: Record<string, unknown>) => ({
         ...announcement,
         author: 'User',
         category: announcement.category as Announcement['category'],
@@ -224,7 +224,7 @@ export const studentsApi = {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return (data || []).map((student: any) => ({
+      return (data || []).map((student: Record<string, unknown>) => ({
         ...student,
         status: student.status as Student['status']
       }));
@@ -302,7 +302,7 @@ export const documentsApi = {
 
       if (error) throw error;
 
-      return (data || []).map((doc: any) => ({
+      return (data || []).map((doc: Record<string, unknown>) => ({
         id: doc.id,
         name: doc.name,
         description: doc.description,
