@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export type UserRole = 'admin' | 'teacher' | 'student';
 
@@ -12,10 +14,12 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  switchRole: (role: UserRole) => void;
+  session: Session | null;
+  signIn: (email: string, password: string) => Promise<{ error?: Error }>;
+  signUp: (email: string, password: string, displayName: string, role: UserRole) => Promise<{ error?: Error }>;
+  signOut: () => Promise<void>;
   isAuthenticated: boolean;
+  loading: boolean;
   hasRole: (role: UserRole) => boolean;
 }
 
@@ -29,61 +33,167 @@ export const useAuth = () => {
   return context;
 };
 
-const defaultUsers: Record<UserRole, User> = {
-  admin: {
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@edu-cms.com',
-    role: 'admin',
-  },
-  teacher: {
-    id: '2',
-    name: 'Teacher User',
-    email: 'teacher@edu-cms.com',
-    role: 'teacher',
-  },
-  student: {
-    id: '3',
-    name: 'Student User',
-    email: 'student@edu-cms.com',
-    role: 'student',
-  },
+const cleanupAuthState = () => {
+  // Remove all Supabase auth keys from localStorage
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      localStorage.removeItem(key);
+    }
+  });
+  // Remove from sessionStorage if in use
+  Object.keys(sessionStorage || {}).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      sessionStorage.removeItem(key);
+    }
+  });
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Auto-login as admin for demo purposes
-    const savedUser = localStorage.getItem('edu-cms-user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    } else {
-      setUser(defaultUsers.admin);
-      localStorage.setItem('edu-cms-user', JSON.stringify(defaultUsers.admin));
-    }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        
+        if (session?.user) {
+          // Defer profile fetching to prevent deadlocks
+          setTimeout(async () => {
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .single();
+
+              if (profile) {
+                setUser({
+                  id: profile.user_id,
+                  name: profile.display_name,
+                  email: profile.email,
+                  role: profile.role as UserRole,
+                  avatar: profile.avatar_url
+                });
+              }
+            } catch (error) {
+              console.error('Error fetching user profile:', error);
+            }
+          }, 0);
+        } else {
+          setUser(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        setTimeout(async () => {
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('user_id', session.user.id)
+              .single();
+
+            if (profile) {
+              setUser({
+                id: profile.user_id,
+                name: profile.display_name,
+                email: profile.email,
+                role: profile.role as UserRole,
+                avatar: profile.avatar_url
+              });
+            }
+          } catch (error) {
+            console.error('Error fetching user profile:', error);
+          }
+        }, 0);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock authentication - in real app, this would call an API
-    const foundUser = Object.values(defaultUsers).find(u => u.email === email);
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('edu-cms-user', JSON.stringify(foundUser));
-      return true;
+  const signIn = async (email: string, password: string) => {
+    try {
+      // Clean up existing state
+      cleanupAuthState();
+      
+      // Attempt global sign out
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) return { error };
+      
+      if (data.user) {
+        // Force page reload for clean state
+        window.location.href = '/';
+      }
+      
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
     }
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('edu-cms-user');
+  const signUp = async (email: string, password: string, displayName: string, role: UserRole) => {
+    try {
+      // Clean up existing state
+      cleanupAuthState();
+      
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            display_name: displayName,
+            role: role
+          }
+        }
+      });
+      
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
   };
 
-  const switchRole = (role: UserRole) => {
-    const newUser = defaultUsers[role];
-    setUser(newUser);
-    localStorage.setItem('edu-cms-user', JSON.stringify(newUser));
+  const signOut = async () => {
+    try {
+      // Clean up auth state
+      cleanupAuthState();
+      
+      // Attempt global sign out
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Ignore errors
+      }
+      
+      // Force page reload for a clean state
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const hasRole = (role: UserRole) => {
@@ -94,10 +204,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
-        login,
-        logout,
-        switchRole,
-        isAuthenticated: !!user,
+        session,
+        signIn,
+        signUp,
+        signOut,
+        isAuthenticated: !!session?.user,
+        loading,
         hasRole,
       }}
     >

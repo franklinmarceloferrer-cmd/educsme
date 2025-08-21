@@ -6,21 +6,20 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { announcementsApi, type Announcement } from "@/lib/mockApi";
+import { announcementsApi, type Announcement } from "@/lib/supabaseApi";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-const announcementSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
-  content: z.string().min(1, "Content is required").max(5000, "Content must be less than 5000 characters"),
-  category: z.enum(["general", "academic", "events", "urgent"]),
-  isPublished: z.boolean(),
+const formSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
+  category: z.enum(["general", "urgent", "academic", "event"]),
+  priority: z.enum(["low", "medium", "high"]),
+  is_published: z.boolean(),
 });
-
-type AnnouncementFormData = z.infer<typeof announcementSchema>;
 
 interface AnnouncementFormProps {
   announcement?: Announcement;
@@ -30,21 +29,15 @@ interface AnnouncementFormProps {
 
 export function AnnouncementForm({ announcement, onSuccess, onCancel }: AnnouncementFormProps) {
   const { user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<AnnouncementFormData>({
-    resolver: zodResolver(announcementSchema),
+  
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: announcement?.title || "",
       content: announcement?.content || "",
       category: announcement?.category || "general",
-      isPublished: announcement?.isPublished ?? true,
+      priority: announcement?.priority || "medium",
+      is_published: announcement?.is_published || false,
     },
   });
 
@@ -71,108 +64,146 @@ export function AnnouncementForm({ announcement, onSuccess, onCancel }: Announce
     },
   });
 
-  const onSubmit = async (data: AnnouncementFormData) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user) return;
 
-    setIsSubmitting(true);
     try {
       if (announcement) {
         await updateMutation.mutateAsync({
           id: announcement.id,
-          data: { ...data },
+          data: values,
         });
       } else {
         await createMutation.mutateAsync({
-          title: data.title,
-          content: data.content,
-          category: data.category,
-          author: user.name,
-          authorId: user.id,
-          isPublished: data.isPublished,
+          title: values.title,
+          content: values.content,
+          category: values.category,
+          priority: values.priority,
+          is_published: values.is_published,
         });
       }
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error('Error submitting form:', error);
     }
   };
 
-  const categoryOptions = [
-    { value: "general", label: "General" },
-    { value: "academic", label: "Academic" },
-    { value: "events", label: "Events" },
-    { value: "urgent", label: "Urgent" },
-  ];
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
-        <Input
-          id="title"
-          {...register("title")}
-          placeholder="Enter announcement title"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter announcement title" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.title && (
-          <p className="text-sm text-destructive">{errors.title.message}</p>
-        )}
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="category">Category</Label>
-        <Select
-          value={watch("category")}
-          onValueChange={(value) => setValue("category", value as any)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            {categoryOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.category && (
-          <p className="text-sm text-destructive">{errors.category.message}</p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="content">Content</Label>
-        <Textarea
-          id="content"
-          {...register("content")}
-          placeholder="Enter announcement content"
-          rows={6}
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="general">General</SelectItem>
+                  <SelectItem value="academic">Academic</SelectItem>
+                  <SelectItem value="event">Event</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.content && (
-          <p className="text-sm text-destructive">{errors.content.message}</p>
-        )}
-      </div>
 
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="isPublished"
-          checked={watch("isPublished")}
-          onCheckedChange={(checked) => setValue("isPublished", checked)}
+        <FormField
+          control={form.control}
+          name="priority"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Priority</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        <Label htmlFor="isPublished">Publish immediately</Label>
-      </div>
 
-      <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting
-            ? "Saving..."
-            : announcement
-            ? "Update Announcement"
-            : "Create Announcement"}
-        </Button>
-      </div>
-    </form>
+        <FormField
+          control={form.control}
+          name="content"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Content</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Enter announcement content"
+                  className="resize-none"
+                  rows={6}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="is_published"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Publish Announcement</FormLabel>
+                <FormDescription>
+                  Make this announcement visible to all users
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+            {createMutation.isPending || updateMutation.isPending
+              ? "Saving..."
+              : announcement
+              ? "Update Announcement"
+              : "Create Announcement"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

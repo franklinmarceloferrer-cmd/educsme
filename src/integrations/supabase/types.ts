@@ -14,7 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      announcements: {
+        Row: {
+          author_id: string
+          category: string
+          content: string
+          created_at: string
+          id: string
+          is_published: boolean
+          priority: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          category?: string
+          content: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          priority?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          priority?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          is_public: boolean
+          name: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          is_public?: boolean
+          name: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          is_public?: boolean
+          name?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name: string
+          email: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          email?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string
+          enrollment_date: string
+          grade: string
+          id: string
+          name: string
+          phone: string | null
+          section: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email: string
+          enrollment_date?: string
+          grade: string
+          id?: string
+          name: string
+          phone?: string | null
+          section: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string
+          enrollment_date?: string
+          grade?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          section?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

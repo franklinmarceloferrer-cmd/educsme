@@ -66,7 +66,7 @@ const navigation = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
-  const { user, logout, switchRole, hasRole } = useAuth();
+  const { user, signOut, hasRole } = useAuth();
   const collapsed = state === "collapsed";
   
   const filteredNavigation = navigation.filter(item => 
@@ -132,19 +132,13 @@ export function AppSidebar() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Switch Role (Demo)</DropdownMenuLabel>
+              <DropdownMenuLabel>Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => switchRole('admin')}>
-                Admin User
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => switchRole('teacher')}>
-                Teacher User
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => switchRole('student')}>
-                Student User
+              <DropdownMenuItem disabled>
+                Role: {user.role}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout}>
+              <DropdownMenuItem onClick={signOut}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
               </DropdownMenuItem>

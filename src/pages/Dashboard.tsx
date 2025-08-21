@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { dashboardApi } from "@/lib/mockApi";
+import { dashboardApi } from '@/lib/supabaseApi';
 import { Users, Megaphone, FileText, Activity } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -26,7 +26,7 @@ export default function Dashboard() {
     },
     {
       title: "Announcements",
-      value: stats?.activeAnnouncements || 0,
+      value: stats?.totalAnnouncements || 0,
       icon: Megaphone,
       description: "Published announcements",
     },

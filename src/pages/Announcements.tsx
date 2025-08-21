@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { announcementsApi, type Announcement } from "@/lib/mockApi";
+import { announcementsApi, type Announcement } from "@/lib/supabaseApi";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
@@ -66,7 +66,7 @@ export default function Announcements() {
     const colors = {
       general: "bg-blue-100 text-blue-800",
       academic: "bg-green-100 text-green-800",
-      events: "bg-purple-100 text-purple-800",
+      event: "bg-purple-100 text-purple-800",
       urgent: "bg-red-100 text-red-800",
     };
     return colors[category as keyof typeof colors] || colors.general;
@@ -147,7 +147,7 @@ export default function Announcements() {
                     <CardDescription className="flex items-center gap-4">
                       <span>By {announcement.author}</span>
                       <span>•</span>
-                      <span>{new Date(announcement.createdAt).toLocaleDateString()}</span>
+                      <span>{new Date(announcement.created_at).toLocaleDateString()}</span>
                       <Badge className={getCategoryColor(announcement.category)}>
                         {announcement.category}
                       </Badge>
@@ -252,7 +252,7 @@ export default function Announcements() {
               <div className="flex items-center gap-4 mt-2">
                 <span>By {selectedAnnouncement?.author}</span>
                 <span>•</span>
-                <span>{selectedAnnouncement && new Date(selectedAnnouncement.createdAt).toLocaleDateString()}</span>
+                <span>{selectedAnnouncement && new Date(selectedAnnouncement.created_at).toLocaleDateString()}</span>
                 {selectedAnnouncement && (
                   <Badge className={getCategoryColor(selectedAnnouncement.category)}>
                     {selectedAnnouncement.category}
