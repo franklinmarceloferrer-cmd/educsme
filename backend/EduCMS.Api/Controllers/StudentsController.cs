@@ -247,7 +247,7 @@ public class StudentsController : ControllerBase
                 return NotFound(ApiResponse<object>.ErrorResult($"Student with ID {id} not found"));
             }
 
-            return Ok(ApiResponse<object>.SuccessResult(null, "Student deleted successfully"));
+            return Ok(ApiResponse<object>.SuccessResult(new { }, "Student deleted successfully"));
         }
         catch (Exception ex)
         {
@@ -292,7 +292,7 @@ public class StudentsController : ControllerBase
                 return NotFound(ApiResponse<object>.ErrorResult($"Student with ID {id} not found"));
             }
 
-            return Ok(ApiResponse<object>.SuccessResult(null, "Student avatar updated successfully"));
+            return Ok(ApiResponse<object>.SuccessResult(new { }, "Student avatar updated successfully"));
         }
         catch (Exception ex)
         {

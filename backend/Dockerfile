@@ -2,12 +2,15 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy project files and restore dependencies
+# Copy solution and project files
+COPY ["EduCMS.sln", "./"]
+COPY ["NuGet.Config", "./"]
 COPY ["EduCMS.Api/EduCMS.Api.csproj", "EduCMS.Api/"]
 COPY ["EduCMS.Core/EduCMS.Core.csproj", "EduCMS.Core/"]
 COPY ["EduCMS.Infrastructure/EduCMS.Infrastructure.csproj", "EduCMS.Infrastructure/"]
 
-RUN dotnet restore "EduCMS.Api/EduCMS.Api.csproj"
+# Restore dependencies using solution file
+RUN dotnet restore "EduCMS.sln" --verbosity minimal
 
 # Copy all source code
 COPY . .

@@ -60,7 +60,7 @@ public class StudentService : IStudentService
             throw new ArgumentNullException(nameof(student));
 
         // Validate business rules
-        await ValidateStudentAsync(student, cancellationToken);
+        await ValidateStudentAsync(student, null, cancellationToken);
 
         // Create the student
         var createdStudent = await _unitOfWork.Students.AddAsync(student, cancellationToken);
@@ -218,13 +218,13 @@ public class StudentService : IStudentService
 
         if (!string.IsNullOrWhiteSpace(grade))
         {
-            var gradePredicate = new System.Linq.Expressions.Expression<Func<Student, bool>>(s => s.Grade == grade);
+            System.Linq.Expressions.Expression<Func<Student, bool>> gradePredicate = s => s.Grade == grade;
             predicate = predicate == null ? gradePredicate : CombinePredicates(predicate, gradePredicate);
         }
 
         if (status.HasValue)
         {
-            var statusPredicate = new System.Linq.Expressions.Expression<Func<Student, bool>>(s => s.Status == status.Value);
+            System.Linq.Expressions.Expression<Func<Student, bool>> statusPredicate = s => s.Status == status.Value;
             predicate = predicate == null ? statusPredicate : CombinePredicates(predicate, statusPredicate);
         }
 

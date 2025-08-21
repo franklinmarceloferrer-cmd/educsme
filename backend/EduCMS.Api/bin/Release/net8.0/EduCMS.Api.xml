@@ -1,0 +1,309 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>EduCMS.Api</name>
+    </assembly>
+    <members>
+        <member name="T:EduCMS.Api.Controllers.StudentsController">
+            <summary>
+            API controller for student management operations
+            </summary>
+        </member>
+        <member name="M:EduCMS.Api.Controllers.StudentsController.GetStudents(System.Int32,System.Int32,System.String,System.String,System.Nullable{EduCMS.Core.Entities.StudentStatus},System.Threading.CancellationToken)">
+            <summary>
+            Get all students with optional filtering and pagination
+            </summary>
+            <param name="pageNumber">Page number (1-based)</param>
+            <param name="pageSize">Number of items per page (1-100)</param>
+            <param name="searchTerm">Search term for name, email, or student ID</param>
+            <param name="grade">Filter by grade</param>
+            <param name="status">Filter by status</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Paged list of students</returns>
+        </member>
+        <member name="M:EduCMS.Api.Controllers.StudentsController.GetStudent(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Get student by ID
+            </summary>
+            <param name="id">Student ID</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Student details</returns>
+        </member>
+        <member name="M:EduCMS.Api.Controllers.StudentsController.CreateStudent(EduCMS.Api.Models.CreateStudentDto,System.Threading.CancellationToken)">
+            <summary>
+            Create a new student
+            </summary>
+            <param name="createStudentDto">Student creation data</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Created student</returns>
+        </member>
+        <member name="M:EduCMS.Api.Controllers.StudentsController.UpdateStudent(System.Guid,EduCMS.Api.Models.UpdateStudentDto,System.Threading.CancellationToken)">
+            <summary>
+            Update an existing student
+            </summary>
+            <param name="id">Student ID</param>
+            <param name="updateStudentDto">Student update data</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Updated student</returns>
+        </member>
+        <member name="M:EduCMS.Api.Controllers.StudentsController.DeleteStudent(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Delete a student (soft delete)
+            </summary>
+            <param name="id">Student ID</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Success confirmation</returns>
+        </member>
+        <member name="M:EduCMS.Api.Controllers.StudentsController.UpdateStudentAvatar(System.Guid,EduCMS.Api.Models.UpdateStudentAvatarDto,System.Threading.CancellationToken)">
+            <summary>
+            Update student avatar
+            </summary>
+            <param name="id">Student ID</param>
+            <param name="updateAvatarDto">Avatar update data</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Success confirmation</returns>
+        </member>
+        <member name="T:EduCMS.Api.Mappings.MappingProfile">
+            <summary>
+            AutoMapper profile for mapping between entities and DTOs
+            </summary>
+        </member>
+        <member name="T:EduCMS.Api.Models.StudentDto">
+            <summary>
+            Data Transfer Object for Student entity
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.Id">
+            <summary>
+            Unique identifier for the student
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.StudentId">
+            <summary>
+            Student's unique identifier (student ID)
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.Name">
+            <summary>
+            Student's full name
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.Email">
+            <summary>
+            Student's email address
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.Grade">
+            <summary>
+            Student's grade level
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.Section">
+            <summary>
+            Student's section or class
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.EnrollmentDate">
+            <summary>
+            Date when the student enrolled
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.Status">
+            <summary>
+            Student's current status
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.AvatarUrl">
+            <summary>
+            URL to the student's avatar/profile picture
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.PhoneNumber">
+            <summary>
+            Student's phone number
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.Address">
+            <summary>
+            Student's address
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.DateOfBirth">
+            <summary>
+            Date of birth
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.EmergencyContact">
+            <summary>
+            Emergency contact information
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.Notes">
+            <summary>
+            Additional notes about the student
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.CreatedAt">
+            <summary>
+            Date and time when the student record was created
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.StudentDto.UpdatedAt">
+            <summary>
+            Date and time when the student record was last updated
+            </summary>
+        </member>
+        <member name="T:EduCMS.Api.Models.CreateStudentDto">
+            <summary>
+            Data Transfer Object for creating a new student
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.CreateStudentDto.StudentId">
+            <summary>
+            Student's unique identifier (student ID)
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.CreateStudentDto.Name">
+            <summary>
+            Student's full name
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.CreateStudentDto.Email">
+            <summary>
+            Student's email address
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.CreateStudentDto.Grade">
+            <summary>
+            Student's grade level
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.CreateStudentDto.Section">
+            <summary>
+            Student's section or class
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.CreateStudentDto.EnrollmentDate">
+            <summary>
+            Date when the student enrolled (optional, defaults to current date)
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.CreateStudentDto.Status">
+            <summary>
+            Student's current status (optional, defaults to Active)
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.CreateStudentDto.PhoneNumber">
+            <summary>
+            Student's phone number
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.CreateStudentDto.Address">
+            <summary>
+            Student's address
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.CreateStudentDto.DateOfBirth">
+            <summary>
+            Date of birth
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.CreateStudentDto.EmergencyContact">
+            <summary>
+            Emergency contact information
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.CreateStudentDto.Notes">
+            <summary>
+            Additional notes about the student
+            </summary>
+        </member>
+        <member name="T:EduCMS.Api.Models.UpdateStudentDto">
+            <summary>
+            Data Transfer Object for updating an existing student
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.UpdateStudentDto.StudentId">
+            <summary>
+            Student's unique identifier (student ID)
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.UpdateStudentDto.Name">
+            <summary>
+            Student's full name
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.UpdateStudentDto.Email">
+            <summary>
+            Student's email address
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.UpdateStudentDto.Grade">
+            <summary>
+            Student's grade level
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.UpdateStudentDto.Section">
+            <summary>
+            Student's section or class
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.UpdateStudentDto.Status">
+            <summary>
+            Student's current status
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.UpdateStudentDto.PhoneNumber">
+            <summary>
+            Student's phone number
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.UpdateStudentDto.Address">
+            <summary>
+            Student's address
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.UpdateStudentDto.DateOfBirth">
+            <summary>
+            Date of birth
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.UpdateStudentDto.EmergencyContact">
+            <summary>
+            Emergency contact information
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.UpdateStudentDto.Notes">
+            <summary>
+            Additional notes about the student
+            </summary>
+        </member>
+        <member name="T:EduCMS.Api.Models.UpdateStudentAvatarDto">
+            <summary>
+            Data Transfer Object for updating student avatar
+            </summary>
+        </member>
+        <member name="P:EduCMS.Api.Models.UpdateStudentAvatarDto.AvatarUrl">
+            <summary>
+            URL to the student's new avatar/profile picture
+            </summary>
+        </member>
+        <member name="T:EduCMS.Api.Models.StudentStatisticsDto">
+            <summary>
+            Data Transfer Object for student statistics
+            </summary>
+        </member>
+        <member name="T:EduCMS.Api.Models.ApiResponse`1">
+            <summary>
+            Generic API response wrapper
+            </summary>
+            <typeparam name="T">Response data type</typeparam>
+        </member>
+        <member name="T:EduCMS.Api.Models.PagedResponse`1">
+            <summary>
+            Paged response wrapper
+            </summary>
+            <typeparam name="T">Item type</typeparam>
+        </member>
+    </members>
+</doc>

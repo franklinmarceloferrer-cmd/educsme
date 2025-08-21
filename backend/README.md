@@ -70,14 +70,29 @@ EduCMS.Infrastructure/     # Data Access Layer (EF Core, Repositories)
 
 ### **Local Development Setup**
 
-1. **Clone and Navigate**
+#### **Prerequisites**
+- .NET 8.0 SDK or later
+- SQL Server (LocalDB for development)
+- Visual Studio 2022, VS Code, or JetBrains Rider
+
+#### **Quick Start (Recommended)**
+
+1. **Navigate to Backend Directory**
    ```bash
    cd backend
    ```
 
-2. **Restore Dependencies**
+2. **Run Automated Build Script**
+
+   **Windows (PowerShell):**
+   ```powershell
+   .\restore-and-build.ps1
+   ```
+
+   **Linux/macOS (Bash):**
    ```bash
-   dotnet restore
+   chmod +x restore-and-build.sh
+   ./restore-and-build.sh
    ```
 
 3. **Update Database Connection**
@@ -98,11 +113,35 @@ EduCMS.Infrastructure/     # Data Access Layer (EF Core, Repositories)
 
 5. **Start the API**
    ```bash
-   dotnet run
+   dotnet run --project EduCMS.Api
    ```
 
 6. **Access Swagger Documentation**
    Open `https://localhost:7001` or `http://localhost:5000`
+
+#### **Manual Setup (Alternative)**
+
+If you prefer manual setup or the automated script doesn't work:
+
+1. **Clean Previous Builds**
+   ```bash
+   dotnet clean EduCMS.sln
+   ```
+
+2. **Clear NuGet Cache**
+   ```bash
+   dotnet nuget locals all --clear
+   ```
+
+3. **Restore Dependencies**
+   ```bash
+   dotnet restore EduCMS.sln --no-cache
+   ```
+
+4. **Build Solution**
+   ```bash
+   dotnet build EduCMS.sln --configuration Release
+   ```
 
 ### **Docker Development**
 
@@ -280,6 +319,62 @@ The .NET API is designed to be compatible with the existing Supabase implementat
 - **Same data models** and response formats
 - **Consistent error handling**
 - **Compatible authentication** flow
+
+## 🔧 **Troubleshooting**
+
+### **Common Build Issues**
+
+#### **Network Connectivity Problems**
+If you encounter "connection aborted by host software" errors:
+
+1. **Check Internet Connection**
+   ```bash
+   ping api.nuget.org
+   ```
+
+2. **Clear NuGet Cache**
+   ```bash
+   dotnet nuget locals all --clear
+   ```
+
+3. **Disable Antivirus/Firewall Temporarily**
+   - Some antivirus software blocks NuGet downloads
+   - Add exceptions for `dotnet.exe` and NuGet cache folders
+
+4. **Use Corporate Proxy (if applicable)**
+   Update `NuGet.Config` with proxy settings
+
+#### **Package Version Issues**
+If specific package versions are not found:
+
+1. **Check Package Availability**
+   ```bash
+   dotnet list package --outdated
+   ```
+
+2. **Update to Latest Stable Versions**
+   ```bash
+   dotnet add package PackageName --version LatestVersion
+   ```
+
+3. **Remove Package Lock Files**
+   ```bash
+   rm -rf */obj */bin packages
+   ```
+
+#### **Build Failures**
+If the build fails after package restore:
+
+1. **Check .NET SDK Version**
+   ```bash
+   dotnet --version  # Should be 8.0.x or later
+   ```
+
+2. **Clean and Rebuild**
+   ```bash
+   dotnet clean EduCMS.sln
+   dotnet build EduCMS.sln --configuration Release
+   ```
 
 ## 🎯 **Interview Demonstration Points**
 

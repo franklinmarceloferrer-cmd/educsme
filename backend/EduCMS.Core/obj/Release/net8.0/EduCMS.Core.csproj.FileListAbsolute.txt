@@ -1,0 +1,13 @@
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\obj\Release\net8.0\EduCMS.Core.csproj.AssemblyReference.cache
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\obj\Release\net8.0\EduCMS.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\obj\Release\net8.0\EduCMS.Core.AssemblyInfoInputs.cache
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\obj\Release\net8.0\EduCMS.Core.AssemblyInfo.cs
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\obj\Release\net8.0\EduCMS.Core.csproj.CoreCompileInputs.cache
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\obj\Release\net8.0\EduCMS.Core.sourcelink.json
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\bin\Release\net8.0\EduCMS.Core.deps.json
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\bin\Release\net8.0\EduCMS.Core.dll
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\bin\Release\net8.0\EduCMS.Core.pdb
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\obj\Release\net8.0\EduCMS.Core.dll
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\obj\Release\net8.0\refint\EduCMS.Core.dll
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\obj\Release\net8.0\EduCMS.Core.pdb
+C:\Users\frank_o3qkvjc\Documents\GitHub\educsme\backend\EduCMS.Core\obj\Release\net8.0\ref\EduCMS.Core.dll
