@@ -48,10 +48,10 @@ export default function Dashboard() {
   return (
     <div className="flex-1 space-y-6 p-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight text-brand-red">
           Welcome back, {user?.name}!
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-brand-blue">
           Here's an overview of your educational management system.
         </p>
       </div>
@@ -64,7 +64,7 @@ export default function Dashboard() {
               <CardTitle className="text-sm font-medium">
                 {card.title}
               </CardTitle>
-              <card.icon className="h-4 w-4 text-muted-foreground" />
+              <card.icon className="h-4 w-4 text-brand-blue" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -108,8 +108,8 @@ export default function Dashboard() {
             <div className="space-y-4">
               {activity?.map((item) => (
                 <div key={item.id} className="flex items-center space-x-4">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Activity className="h-4 w-4 text-primary" />
+                  <div className="w-8 h-8 bg-brand-red-light rounded-full flex items-center justify-center">
+                    <Activity className="h-4 w-4 text-brand-red" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{item.action}</p>

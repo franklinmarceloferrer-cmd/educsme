@@ -17,44 +17,54 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* Educational blue theme */
-    --primary: 217 91% 60%;
+    /* EduCMS Brand Colors - Red Ribbon & Matisse */
+    --primary: 348 96% 44%; /* #e4042c - Red Ribbon */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 199 67% 39%; /* #207ea4 - Matisse */
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 142 71% 45%;
+    --accent: 199 67% 39%; /* Using brand blue for accents */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 348 96% 44%; /* Using brand red for destructive actions */
+    --destructive-foreground: 0 0% 100%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 217 91% 60%;
+    --ring: 348 96% 44%; /* Using brand red for focus rings */
 
     --radius: 0.5rem;
 
-    /* Educational sidebar colors */
-    --sidebar-background: 217 91% 60%;
+    /* EduCMS sidebar colors with brand palette */
+    --sidebar-background: 348 96% 44%; /* Brand red background */
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 217 91% 60%;
-    --sidebar-accent: 217 91% 55%;
+    --sidebar-primary-foreground: 348 96% 44%;
+    --sidebar-accent: 199 67% 39%; /* Brand blue for accents */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 217 91% 55%;
-    --sidebar-ring: 217 91% 70%;
+    --sidebar-border: 348 96% 50%; /* Slightly lighter red for borders */
+    --sidebar-ring: 199 67% 45%; /* Brand blue for focus rings */
+
+    /* EduCMS Brand Color Variables for Direct Use */
+    --brand-red: #e4042c;
+    --brand-blue: #207ea4;
+    --brand-red-hover: #c8032a;
+    --brand-blue-hover: #1c6b8a;
+    --brand-red-light: #f8e6ea;
+    --brand-blue-light: #e6f2f7;
+    --brand-red-dark: #b8032a;
+    --brand-blue-dark: #1a5f7a;
 
     /* Educational specific colors */
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
     --warning: 43 96% 56%;
     --warning-foreground: 0 0% 0%;
-    --info: 199 89% 48%;
+    --info: 199 67% 39%; /* Using brand blue for info */
     --info-foreground: 0 0% 100%;
   }
 
@@ -68,32 +78,32 @@ All colors MUST be HSL.
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 348 96% 44%; /* Brand red remains consistent in dark mode */
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 199 67% 39%; /* Brand blue remains consistent in dark mode */
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 199 67% 39%; /* Brand blue for accents in dark mode */
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 348 96% 44%; /* Brand red for destructive actions in dark mode */
     --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
+    --sidebar-background: 348 96% 20%; /* Darker brand red for dark mode */
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: 199 67% 39%; /* Brand blue for primary elements */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent: 199 67% 25%; /* Darker brand blue for accents */
     --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-border: 348 96% 25%; /* Slightly lighter red for borders */
+    --sidebar-ring: 199 67% 45%; /* Brand blue for focus rings */
   }
 }
 
@@ -104,5 +114,56 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* EduCMS Brand Color Utility Classes */
+@layer utilities {
+  .text-brand-red {
+    color: var(--brand-red);
+  }
+
+  .text-brand-blue {
+    color: var(--brand-blue);
+  }
+
+  .bg-brand-red {
+    background-color: var(--brand-red);
+  }
+
+  .bg-brand-blue {
+    background-color: var(--brand-blue);
+  }
+
+  .bg-brand-red-light {
+    background-color: var(--brand-red-light);
+  }
+
+  .bg-brand-blue-light {
+    background-color: var(--brand-blue-light);
+  }
+
+  .border-brand-red {
+    border-color: var(--brand-red);
+  }
+
+  .border-brand-blue {
+    border-color: var(--brand-blue);
+  }
+
+  .hover\:bg-brand-red-hover:hover {
+    background-color: var(--brand-red-hover);
+  }
+
+  .hover\:bg-brand-blue-hover:hover {
+    background-color: var(--brand-blue-hover);
+  }
+
+  .focus\:ring-brand-red:focus {
+    --tw-ring-color: var(--brand-red);
+  }
+
+  .focus\:ring-brand-blue:focus {
+    --tw-ring-color: var(--brand-blue);
   }
 }

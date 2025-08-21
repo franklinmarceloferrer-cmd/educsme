@@ -11,6 +11,9 @@ const alertVariants = cva(
         default: "bg-background text-foreground",
         destructive:
           "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+        // EduCMS Brand Alert Variants
+        "brand-red": "border-brand-red/50 bg-brand-red-light text-brand-red-dark [&>svg]:text-brand-red",
+        "brand-blue": "border-brand-blue/50 bg-brand-blue-light text-brand-blue-dark [&>svg]:text-brand-blue",
       },
     },
     defaultVariants: {

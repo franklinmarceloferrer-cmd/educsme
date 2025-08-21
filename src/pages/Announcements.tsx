@@ -64,10 +64,10 @@ export default function Announcements() {
 
   const getCategoryColor = (category: string) => {
     const colors = {
-      general: "bg-blue-100 text-blue-800",
+      general: "bg-brand-blue-light text-brand-blue-dark",
       academic: "bg-green-100 text-green-800",
       event: "bg-purple-100 text-purple-800",
-      urgent: "bg-red-100 text-red-800",
+      urgent: "bg-brand-red-light text-brand-red-dark",
     };
     return colors[category as keyof typeof colors] || colors.general;
   };
@@ -78,13 +78,13 @@ export default function Announcements() {
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Announcements</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight text-brand-red">Announcements</h1>
+          <p className="text-brand-blue">
             Manage and view all educational announcements
           </p>
         </div>
         {canEdit && (
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Button variant="brand-red" onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New Announcement
           </Button>

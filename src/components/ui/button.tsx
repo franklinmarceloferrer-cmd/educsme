@@ -19,6 +19,11 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // EduCMS Brand Button Variants
+        "brand-red": "bg-brand-red text-white hover:bg-brand-red-hover focus:ring-brand-red/20",
+        "brand-blue": "bg-brand-blue text-white hover:bg-brand-blue-hover focus:ring-brand-blue/20",
+        "brand-red-outline": "border border-brand-red text-brand-red bg-transparent hover:bg-brand-red-light hover:text-brand-red-dark",
+        "brand-blue-outline": "border border-brand-blue text-brand-blue bg-transparent hover:bg-brand-blue-light hover:text-brand-blue-dark",
       },
       size: {
         default: "h-10 px-4 py-2",

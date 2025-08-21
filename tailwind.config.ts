@@ -24,6 +24,17 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
+				// EduCMS Brand Colors
+				brand: {
+					red: 'var(--brand-red)',
+					blue: 'var(--brand-blue)',
+					'red-hover': 'var(--brand-red-hover)',
+					'blue-hover': 'var(--brand-blue-hover)',
+					'red-light': 'var(--brand-red-light)',
+					'blue-light': 'var(--brand-blue-light)',
+					'red-dark': 'var(--brand-red-dark)',
+					'blue-dark': 'var(--brand-blue-dark)',
+				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'

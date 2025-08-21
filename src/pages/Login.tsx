@@ -64,12 +64,12 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-red-light via-background to-brand-blue-light p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center space-x-2">
-            <GraduationCap className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">EduCMS</h1>
+            <GraduationCap className="h-8 w-8 text-brand-red" />
+            <h1 className="text-2xl font-bold text-brand-red">EduCMS</h1>
           </div>
         </div>
 
@@ -111,7 +111,7 @@ export default function Login() {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button type="submit" variant="brand-red" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign In
                   </Button>
@@ -167,7 +167,7 @@ export default function Login() {
                       <option value="admin">Admin</option>
                     </select>
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button type="submit" variant="brand-blue" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign Up
                   </Button>

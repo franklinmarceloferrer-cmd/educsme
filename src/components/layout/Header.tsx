@@ -18,12 +18,12 @@ export function Header() {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="h-14 flex items-center justify-between border-b bg-background px-4">
+    <header className="h-14 flex items-center justify-between border-b bg-background px-4 border-brand-red/20">
       <div className="flex items-center gap-4">
         <SidebarTrigger />
         <div>
-          <h2 className="text-lg font-semibold">Educational CMS</h2>
-          <p className="text-xs text-muted-foreground">Management System</p>
+          <h2 className="text-lg font-semibold text-brand-red">Educational CMS</h2>
+          <p className="text-xs text-brand-blue">Management System</p>
         </div>
       </div>
       

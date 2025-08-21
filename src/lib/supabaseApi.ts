@@ -296,7 +296,7 @@ export const documentsApi = {
         .from('documents')
         .select(`
           *,
-          profiles!documents_uploaded_by_fkey(display_name)
+          profiles!documents_profile_id_fkey(display_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -340,7 +340,7 @@ export const documentsApi = {
         })
         .select(`
           *,
-          profiles!documents_uploaded_by_fkey(display_name)
+          profiles!documents_profile_id_fkey(display_name)
         `)
         .single();
 
@@ -373,7 +373,7 @@ export const documentsApi = {
         .eq('id', id)
         .select(`
           *,
-          profiles!documents_uploaded_by_fkey(display_name)
+          profiles!documents_profile_id_fkey(display_name)
         `)
         .single();
 

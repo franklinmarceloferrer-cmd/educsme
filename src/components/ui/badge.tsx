@@ -15,6 +15,11 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        // EduCMS Brand Badge Variants
+        "brand-red": "border-transparent bg-brand-red text-white hover:bg-brand-red-hover",
+        "brand-blue": "border-transparent bg-brand-blue text-white hover:bg-brand-blue-hover",
+        "brand-red-light": "border-transparent bg-brand-red-light text-brand-red-dark hover:bg-brand-red-light/80",
+        "brand-blue-light": "border-transparent bg-brand-blue-light text-brand-blue-dark hover:bg-brand-blue-light/80",
       },
     },
     defaultVariants: {

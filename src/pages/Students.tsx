@@ -65,18 +65,18 @@ export default function Students() {
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Students</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight text-brand-red">Students</h1>
+          <p className="text-brand-blue">
             Manage student enrollment and information
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={exportToCSV}>
+          <Button variant="brand-blue-outline" onClick={exportToCSV}>
             <Download className="h-4 w-4 mr-2" />
             Export CSV
           </Button>
           {canManage && (
-            <Button>
+            <Button variant="brand-red">
               <Plus className="h-4 w-4 mr-2" />
               Add Student
             </Button>
