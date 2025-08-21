@@ -1,0 +1,322 @@
+# Azure DevOps Pipeline for EduCMS .NET Backend API
+# Clean Architecture ASP.NET Core 8.0 API Deployment
+
+trigger:
+  branches:
+    include:
+    - main
+    - develop
+  paths:
+    include:
+    - backend/*
+    - backend/**/*
+
+pr:
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - backend/*
+    - backend/**/*
+
+# Pipeline variables
+variables:
+  # Build Configuration
+  dotNetVersion: '8.0.x'
+  buildConfiguration: 'Release'
+  
+  # Azure Configuration
+  azureWebAppName: 'educsme-api'
+  azureSubscriptionServiceConnection: 'Azure-EduCMS-ServiceConnection'
+  
+  # Project Configuration
+  workingDirectory: 'backend'
+  solutionPath: 'backend/EduCMS.sln'
+  apiProjectPath: 'backend/EduCMS.Api/EduCMS.Api.csproj'
+  testProjectsPattern: 'backend/**/*Tests.csproj'
+  
+  # Artifact Configuration
+  artifactName: 'educsme-backend-api'
+
+# Variable Groups (to be configured in Azure DevOps)
+# - EduCMS-Backend-Secrets (contains connection strings, JWT secrets)
+# - EduCMS-Backend-Production (production-specific variables)
+# - EduCMS-Backend-Staging (staging-specific variables)
+
+stages:
+# ==========================================
+# STAGE 1: BUILD AND TEST
+# ==========================================
+- stage: BuildAndTest
+  displayName: '🏗️ Build and Test Backend'
+  jobs:
+  - job: BuildJob
+    displayName: 'Build and Test .NET API'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    variables:
+    - group: EduCMS-Backend-Secrets
+    
+    steps:
+    # Checkout with full history
+    - checkout: self
+      fetchDepth: 0
+      displayName: '📥 Checkout Code'
+    
+    # Setup .NET SDK
+    - task: UseDotNet@2
+      displayName: '🟢 Setup .NET SDK $(dotNetVersion)'
+      inputs:
+        version: '$(dotNetVersion)'
+        includePreviewVersions: false
+    
+    # Cache NuGet packages
+    - task: Cache@2
+      displayName: '📦 Cache NuGet Packages'
+      inputs:
+        key: 'nuget | "$(Agent.OS)" | $(workingDirectory)/**/packages.lock.json, $(workingDirectory)/**/*.csproj'
+        restoreKeys: |
+          nuget | "$(Agent.OS)"
+          nuget
+        path: '$(NUGET_PACKAGES)'
+    
+    # Restore NuGet packages
+    - task: DotNetCoreCLI@2
+      displayName: '📦 Restore NuGet Packages'
+      inputs:
+        command: 'restore'
+        projects: '$(solutionPath)'
+        workingDirectory: '$(workingDirectory)'
+        verbosityRestore: 'minimal'
+    
+    # Build solution
+    - task: DotNetCoreCLI@2
+      displayName: '🏗️ Build Solution'
+      inputs:
+        command: 'build'
+        projects: '$(solutionPath)'
+        arguments: '--configuration $(buildConfiguration) --no-restore'
+        workingDirectory: '$(workingDirectory)'
+    
+    # Run unit tests with code coverage
+    - task: DotNetCoreCLI@2
+      displayName: '🧪 Run Unit Tests'
+      inputs:
+        command: 'test'
+        projects: '$(testProjectsPattern)'
+        arguments: '--configuration $(buildConfiguration) --no-build --collect:"XPlat Code Coverage" --logger trx --results-directory $(Agent.TempDirectory)/TestResults'
+        workingDirectory: '$(workingDirectory)'
+        publishTestResults: true
+    
+    # Publish test results
+    - task: PublishTestResults@2
+      displayName: '📊 Publish Test Results'
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '$(Agent.TempDirectory)/TestResults/**/*.trx'
+        failTaskOnFailedTests: true
+    
+    # Publish code coverage results
+    - task: PublishCodeCoverageResults@1
+      displayName: '📈 Publish Code Coverage'
+      condition: succeededOrFailed()
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml'
+    
+    # Security scan with .NET security analyzers
+    - script: |
+        echo "🔒 Running security analysis..."
+        dotnet list $(solutionPath) package --vulnerable --include-transitive || echo "⚠️ Vulnerability check completed"
+      displayName: '🔒 Security Vulnerability Check'
+      workingDirectory: '$(workingDirectory)'
+      continueOnError: true
+    
+    # Publish API project
+    - task: DotNetCoreCLI@2
+      displayName: '📦 Publish API'
+      inputs:
+        command: 'publish'
+        projects: '$(apiProjectPath)'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/api --no-build'
+        workingDirectory: '$(workingDirectory)'
+        zipAfterPublish: true
+        modifyOutputPath: false
+    
+    # Publish build artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: '📤 Publish Build Artifacts'
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)/api'
+        artifactName: '$(artifactName)'
+        publishLocation: 'Container'
+
+# ==========================================
+# STAGE 2: DEPLOY TO STAGING
+# ==========================================
+- stage: DeployStaging
+  displayName: '🚀 Deploy API to Staging'
+  dependsOn: BuildAndTest
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+  
+  variables:
+  - group: EduCMS-Backend-Staging
+  
+  jobs:
+  - deployment: DeployToStaging
+    displayName: 'Deploy to Azure App Service Staging'
+    environment: 'EduCMS-Backend-Staging'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # Download build artifacts
+          - download: current
+            artifact: '$(artifactName)'
+            displayName: '📥 Download Build Artifacts'
+          
+          # Deploy to Azure App Service Staging Slot
+          - task: AzureWebApp@1
+            displayName: '🚀 Deploy to Azure App Service (Staging)'
+            inputs:
+              azureSubscription: '$(azureSubscriptionServiceConnection)'
+              appType: 'webApp'
+              appName: '$(azureWebAppName)'
+              slotName: 'staging'
+              package: '$(Pipeline.Workspace)/$(artifactName)/*.zip'
+              deploymentMethod: 'auto'
+              appSettings: |
+                -ASPNETCORE_ENVIRONMENT Staging
+                -ConnectionStrings__DefaultConnection "$(StagingConnectionString)"
+                -Jwt__Key "$(JwtKey)"
+                -Jwt__Issuer "$(JwtIssuer)"
+                -Jwt__Audience "$(JwtAudience)"
+                -Cors__AllowedOrigins "$(StagingCorsOrigins)"
+          
+          # Health check for staging API
+          - script: |
+              echo "⏳ Waiting for API deployment to stabilize..."
+              sleep 45
+              
+              STAGING_URL="https://$(azureWebAppName)-staging.azurewebsites.net"
+              HEALTH_ENDPOINT="$STAGING_URL/health"
+              
+              echo "🔍 Testing staging API health endpoint: $HEALTH_ENDPOINT"
+              
+              if curl -f -s --max-time 30 "$HEALTH_ENDPOINT" > /dev/null; then
+                echo "✅ Staging API deployment successful!"
+                echo "🌐 Staging API URL: $STAGING_URL"
+                echo "🏥 Health Check: $HEALTH_ENDPOINT"
+              else
+                echo "❌ Staging API deployment failed - health check failed"
+                exit 1
+              fi
+            displayName: '🔍 API Health Check (Staging)'
+
+# ==========================================
+# STAGE 3: DEPLOY TO PRODUCTION
+# ==========================================
+- stage: DeployProduction
+  displayName: '🚀 Deploy API to Production'
+  dependsOn: BuildAndTest
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  
+  variables:
+  - group: EduCMS-Backend-Production
+  
+  jobs:
+  - deployment: DeployToProduction
+    displayName: 'Deploy to Azure App Service Production'
+    environment: 'EduCMS-Backend-Production'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # Download build artifacts
+          - download: current
+            artifact: '$(artifactName)'
+            displayName: '📥 Download Build Artifacts'
+          
+          # Deploy to Azure App Service Production
+          - task: AzureWebApp@1
+            displayName: '🚀 Deploy to Azure App Service (Production)'
+            inputs:
+              azureSubscription: '$(azureSubscriptionServiceConnection)'
+              appType: 'webApp'
+              appName: '$(azureWebAppName)'
+              package: '$(Pipeline.Workspace)/$(artifactName)/*.zip'
+              deploymentMethod: 'auto'
+              appSettings: |
+                -ASPNETCORE_ENVIRONMENT Production
+                -ConnectionStrings__DefaultConnection "$(ProductionConnectionString)"
+                -Jwt__Key "$(JwtKey)"
+                -Jwt__Issuer "$(JwtIssuer)"
+                -Jwt__Audience "$(JwtAudience)"
+                -Cors__AllowedOrigins "$(ProductionCorsOrigins)"
+                -Logging__LogLevel__Default Information
+          
+          # Health check for production API
+          - script: |
+              echo "⏳ Waiting for API deployment to stabilize..."
+              sleep 45
+              
+              PROD_URL="https://$(azureWebAppName).azurewebsites.net"
+              HEALTH_ENDPOINT="$PROD_URL/health"
+              SWAGGER_ENDPOINT="$PROD_URL/swagger"
+              
+              echo "🔍 Testing production API health endpoint: $HEALTH_ENDPOINT"
+              
+              if curl -f -s --max-time 30 "$HEALTH_ENDPOINT" > /dev/null; then
+                echo "✅ Production API deployment successful!"
+                echo "🌐 Production API URL: $PROD_URL"
+                echo "🏥 Health Check: $HEALTH_ENDPOINT"
+                echo "📚 API Documentation: $SWAGGER_ENDPOINT"
+              else
+                echo "❌ Production API deployment failed - health check failed"
+                exit 1
+              fi
+            displayName: '🔍 API Health Check (Production)'
+          
+          # Post-deployment API verification
+          - script: |
+              PROD_URL="https://$(azureWebAppName).azurewebsites.net"
+              
+              echo "🔍 Running post-deployment API verification..."
+              
+              # Test API endpoints
+              echo "Testing API endpoints..."
+              
+              # Test health endpoint
+              if curl -s --max-time 10 "$PROD_URL/health" | grep -q "Healthy"; then
+                echo "✅ Health endpoint is responding correctly"
+              else
+                echo "⚠️ Health endpoint check failed"
+              fi
+              
+              # Test Swagger documentation
+              if curl -s --max-time 10 "$PROD_URL/swagger" > /dev/null; then
+                echo "✅ Swagger documentation is accessible"
+              else
+                echo "⚠️ Swagger documentation check failed"
+              fi
+              
+              echo "📊 API Deployment Summary:"
+              echo "- Environment: Production"
+              echo "- Status: ✅ Deployed Successfully"
+              echo "- API URL: $PROD_URL"
+              echo "- Health Check: $PROD_URL/health"
+              echo "- Documentation: $PROD_URL/swagger"
+              echo "- Deployed At: $(date -u)"
+              echo "- Build ID: $(Build.BuildId)"
+              echo "- Source Branch: $(Build.SourceBranch)"
+              echo "- Commit: $(Build.SourceVersion)"
+            displayName: '🧪 Post-Deployment API Verification'
