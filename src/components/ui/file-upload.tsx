@@ -164,7 +164,15 @@ export function FileUpload({
                     </div>
                   )}
                   {fileItem.error && (
-                    <p className="text-xs text-destructive mt-1">{fileItem.error}</p>
+                    <div className="mt-1">
+                      <p className="text-xs text-destructive font-medium">Upload Failed</p>
+                      <p className="text-xs text-muted-foreground">{fileItem.error}</p>
+                      {fileItem.error.includes('bucket') && (
+                        <p className="text-xs text-blue-600 mt-1">
+                          💡 Check Storage Setup in Admin settings
+                        </p>
+                      )}
+                    </div>
                   )}
                   {fileItem.progress === 100 && !fileItem.error && (
                     <p className="text-xs text-green-600 mt-1">Upload complete</p>

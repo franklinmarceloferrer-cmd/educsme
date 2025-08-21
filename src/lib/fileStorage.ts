@@ -32,6 +32,33 @@ export interface FileMetadata {
 
 class FileStorageService {
   /**
+   * Check if a storage bucket exists and is accessible
+   */
+  async checkBucketAccess(bucket: StorageBucket): Promise<{ exists: boolean; error?: string }> {
+    try {
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .list('', { limit: 1 });
+
+      if (error) {
+        console.error(`Bucket ${bucket} access error:`, error);
+        return {
+          exists: false,
+          error: `Storage bucket '${bucket}' is not accessible. Please ensure it exists and has proper permissions.`
+        };
+      }
+
+      return { exists: true };
+    } catch (error) {
+      console.error(`Bucket ${bucket} check error:`, error);
+      return {
+        exists: false,
+        error: `Failed to check storage bucket '${bucket}'. Please contact administrator.`
+      };
+    }
+  }
+
+  /**
    * Upload a file to Supabase Storage
    */
   async uploadFile(
@@ -41,6 +68,15 @@ class FileStorageService {
   ): Promise<FileUploadResult> {
     try {
       const { bucket, folder = '', fileName, isPublic = false } = options;
+
+      // Check bucket access first
+      const bucketCheck = await this.checkBucketAccess(bucket);
+      if (!bucketCheck.exists) {
+        return {
+          success: false,
+          error: bucketCheck.error || `Storage bucket '${bucket}' is not available`
+        };
+      }
       
       // Generate unique filename if not provided
       const timestamp = Date.now();
@@ -60,9 +96,20 @@ class FileStorageService {
 
       if (error) {
         console.error('Upload error:', error);
+
+        // Provide more specific error messages
+        let errorMessage = error.message;
+        if (error.message.includes('row-level security policy')) {
+          errorMessage = `Access denied: You don't have permission to upload to the '${bucket}' bucket. Please contact an administrator.`;
+        } else if (error.message.includes('not found')) {
+          errorMessage = `Storage bucket '${bucket}' not found. Please ensure it exists in your Supabase project.`;
+        } else if (error.message.includes('duplicate')) {
+          errorMessage = `A file with this name already exists. Please rename the file or choose a different location.`;
+        }
+
         return {
           success: false,
-          error: error.message
+          error: errorMessage
         };
       }
 
@@ -283,6 +330,71 @@ class FileStorageService {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  /**
+   * Get storage bucket configuration and status
+   */
+  async getStorageStatus(): Promise<{
+    buckets: Record<StorageBucket, { exists: boolean; error?: string }>;
+    allReady: boolean;
+  }> {
+    const buckets: StorageBucket[] = ['documents', 'avatars', 'announcements'];
+    const status: Record<StorageBucket, { exists: boolean; error?: string }> = {} as any;
+    let allReady = true;
+
+    for (const bucket of buckets) {
+      const check = await this.checkBucketAccess(bucket);
+      status[bucket] = check;
+      if (!check.exists) {
+        allReady = false;
+      }
+    }
+
+    return { buckets: status, allReady };
+  }
+
+  /**
+   * Get recommended bucket policies for manual setup
+   */
+  getBucketSetupInstructions(): {
+    bucket: StorageBucket;
+    description: string;
+    isPublic: boolean;
+    policies: string[];
+  }[] {
+    return [
+      {
+        bucket: 'avatars',
+        description: 'Student and user profile pictures',
+        isPublic: true,
+        policies: [
+          'Allow authenticated users to upload their own avatars',
+          'Allow public read access for profile pictures',
+          'Allow users to update their own avatars'
+        ]
+      },
+      {
+        bucket: 'documents',
+        description: 'Document library files',
+        isPublic: false,
+        policies: [
+          'Allow authenticated users to upload documents',
+          'Allow role-based access (admin, teacher can upload/delete)',
+          'Allow students to read public documents only'
+        ]
+      },
+      {
+        bucket: 'announcements',
+        description: 'Announcement attachments',
+        isPublic: false,
+        policies: [
+          'Allow admin and teachers to upload attachments',
+          'Allow all authenticated users to read attachments',
+          'Restrict delete operations to admins and file owners'
+        ]
+      }
+    ];
   }
 }
 

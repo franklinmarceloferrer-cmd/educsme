@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  AZURE_WEBAPP_NAME: educsme-demo
+  AZURE_WEBAPP_NAME: educsme-demo-prod
   NODE_VERSION: '18'
 
 jobs:
@@ -35,8 +35,23 @@ jobs:
       env:
         VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
         VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        VITE_USE_DOTNET_API: 'false'
+        VITE_APP_ENVIRONMENT: 'production'
 
-    - name: 📊 Upload build artifacts
+    - name: � Verify build output
+      run: |
+        if [ ! -d "dist" ]; then
+          echo "❌ Build failed: dist directory not found"
+          exit 1
+        fi
+        if [ ! -f "dist/index.html" ]; then
+          echo "❌ Build failed: index.html not found in dist"
+          exit 1
+        fi
+        echo "✅ Build verification successful"
+        ls -la dist/
+
+    - name: �📊 Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: dist-files
