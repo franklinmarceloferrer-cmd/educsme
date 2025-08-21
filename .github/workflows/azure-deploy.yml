@@ -13,8 +13,8 @@ on:
         default: 'staging'
         type: choice
         options:
-        - staging
-        - production
+          - staging
+          - production
 
 env:
   AZURE_WEBAPP_NAME: educsme-demo

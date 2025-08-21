@@ -3,14 +3,12 @@ name: Mirror to Azure DevOps
 on:
   push:
     branches: [ main, develop, feature/* ]
-  delete:
-    branches: [ main, develop, feature/* ]
   workflow_dispatch:
     inputs:
       force_sync:
         description: 'Force synchronization even if no changes'
         required: false
-        default: 'false'
+        default: false
         type: boolean
 
 env:
