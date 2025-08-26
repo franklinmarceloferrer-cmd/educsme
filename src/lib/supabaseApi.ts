@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { errorService, logApiError } from '@/services/errorService';
 
 // Types with proper casting
 export interface DashboardStats {
