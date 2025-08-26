@@ -139,7 +139,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
       });
       
-      if (error) return { error };
+      if (error) {
+        console.error('Sign in error details:', error);
+        return { error };
+      }
       
       if (data.user) {
         // Force page reload for clean state
@@ -170,6 +173,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       });
+      
+      if (error) {
+        console.error('Sign up error details:', error);
+      } else {
+        console.log('Sign up successful:', data);
+      }
       
       return { error };
     } catch (error) {
