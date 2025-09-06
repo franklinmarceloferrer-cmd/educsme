@@ -74,7 +74,7 @@ export default function Reports() {
             student.name,
             student.email,
             student.grade,
-            student.enrollmentDate,
+            student.enrollment_date,
             student.status
           ])
         ].map(row => row.join(",")).join("\n");
@@ -89,8 +89,8 @@ export default function Reports() {
             announcement.title,
             announcement.author,
             announcement.category,
-            announcement.isPublished ? "Yes" : "No",
-            new Date(announcement.createdAt).toLocaleDateString(),
+            announcement.is_published ? "Yes" : "No",
+            new Date(announcement.created_at).toLocaleDateString(),
             announcement.content.length.toString()
           ])
         ].map(row => row.join(",")).join("\n");
@@ -103,11 +103,11 @@ export default function Reports() {
           ["Name", "Type", "Size", "Category", "Uploaded By", "Upload Date"],
           ...documents.map(doc => [
             doc.name,
-            doc.type,
-            doc.size.toString(),
+            doc.file_type,
+            doc.file_size?.toString() || "0",
             doc.category,
-            doc.uploadedBy,
-            new Date(doc.uploadedAt).toLocaleDateString()
+            doc.uploaded_by,
+            new Date(doc.created_at).toLocaleDateString()
           ])
         ].map(row => row.join(",")).join("\n");
         filename = "documents-report.csv";
@@ -119,7 +119,6 @@ export default function Reports() {
           ["Metric", "Value"],
           ["Total Students", stats.totalStudents.toString()],
           ["Total Announcements", stats.totalAnnouncements.toString()],
-          ["Active Announcements", stats.activeAnnouncements.toString()],
           ["Total Documents", stats.totalDocuments.toString()],
           ["Report Generated", new Date().toLocaleDateString()]
         ].map(row => row.join(",")).join("\n");
@@ -252,7 +251,6 @@ export default function Reports() {
                 <ul className="space-y-1 text-sm">
                   <li>Total Students: {stats?.totalStudents || 0}</li>
                   <li>Total Announcements: {stats?.totalAnnouncements || 0}</li>
-                  <li>Active Announcements: {stats?.activeAnnouncements || 0}</li>
                   <li>Total Documents: {stats?.totalDocuments || 0}</li>
                 </ul>
               </div>

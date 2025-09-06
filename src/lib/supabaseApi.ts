@@ -107,7 +107,7 @@ export const dashboardApi = {
 
       const activities: RecentActivity[] = [];
 
-      announcements?.forEach((announcement: Announcement) => {
+      announcements?.forEach((announcement: any) => {
         activities.push({
           id: announcement.id,
           action: `Created announcement "${announcement.title}"`,

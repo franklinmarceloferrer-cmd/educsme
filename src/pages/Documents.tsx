@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { documentsApi } from "@/lib/supabaseApi";
+import { documentsApi, type Document as DocumentType } from "@/lib/supabaseApi";
 import { fileStorage } from "@/lib/fileStorage";
 import { DocumentUploadDialog } from "@/components/documents/DocumentUploadDialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -72,7 +72,7 @@ export default function Documents() {
     return colors[category as keyof typeof colors] || colors.general;
   };
 
-  const handleDownload = async (document: Document) => {
+  const handleDownload = async (document: DocumentType) => {
     try {
       if (document.file_url.startsWith('http')) {
         // External URL - open in new tab
@@ -181,7 +181,7 @@ export default function Documents() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDownload(document)}
+                      onClick={() => handleDownload(document as DocumentType)}
                       title="Download"
                     >
                       <Download className="h-4 w-4" />
