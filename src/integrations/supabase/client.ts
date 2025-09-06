@@ -5,12 +5,22 @@ import type { Database } from './types';
 let SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 let SUPABASE_PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) as string | undefined;
 
+// Debug logging
+console.log('Environment variables:', {
+  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+  VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  VITE_SUPABASE_PROJECT_ID: import.meta.env.VITE_SUPABASE_PROJECT_ID,
+  VITE_SUPABASE_PUBLISHABLE_KEY: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+});
+
 if (!SUPABASE_URL) {
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string | undefined;
   if (projectId) {
     SUPABASE_URL = `https://${projectId}.supabase.co`;
   }
 }
+
+console.log('Final Supabase config:', { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY });
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   throw new Error('Supabase env vars missing. Set VITE_SUPABASE_URL or VITE_SUPABASE_PROJECT_ID, and VITE_SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY.');
