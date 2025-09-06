@@ -78,11 +78,11 @@ export const dashboardApi = {
         supabase.from('documents').select('id', { count: 'exact' })
       ]);
 
-      // Count teachers from profiles
-      const { count: teacherCount } = await supabase
-        .from('profiles')
-        .select('id', { count: 'exact' })
-        .eq('role', 'teacher');
+      // Count teachers using secure function
+      const { data: teacherCountData } = await supabase.rpc('get_role_count', { 
+        target_role: 'teacher' 
+      });
+      const teacherCount = teacherCountData || 0;
 
       return {
         totalStudents: studentsResult.count || 0,
@@ -136,12 +136,12 @@ export const announcementsApi = {
 
       if (error) throw error;
 
-      return (data || []).map((announcement: Record<string, unknown>) => ({
+      return (data || []).map((announcement: any) => ({
         ...announcement,
         author: 'User',
         category: announcement.category as Announcement['category'],
         priority: announcement.priority as Announcement['priority'],
-        attachments: announcement.attachments || []
+        attachments: []
       }));
     } catch (error) {
       console.error('Error fetching announcements:', error);
@@ -169,7 +169,8 @@ export const announcementsApi = {
         ...data,
         author: 'User',
         category: data.category as Announcement['category'],
-        priority: data.priority as Announcement['priority']
+        priority: data.priority as Announcement['priority'],
+        attachments: []
       };
     } catch (error) {
       console.error('Error creating announcement:', error);
@@ -192,7 +193,8 @@ export const announcementsApi = {
         ...data,
         author: 'User',
         category: data.category as Announcement['category'],
-        priority: data.priority as Announcement['priority']
+        priority: data.priority as Announcement['priority'],
+        attachments: []
       };
     } catch (error) {
       console.error('Error updating announcement:', error);
@@ -225,10 +227,10 @@ export const studentsApi = {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return (data || []).map((student: Record<string, unknown>) => ({
+      return (data || []).map((student: any) => ({
         ...student,
         status: student.status as Student['status']
-      }));
+      })) as Student[];
     } catch (error) {
       console.error('Error fetching students:', error);
       throw error;
@@ -295,15 +297,12 @@ export const documentsApi = {
     try {
       const { data, error } = await supabase
         .from('documents')
-        .select(`
-          *,
-          profiles!documents_profile_id_fkey(display_name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      return (data || []).map((doc: Record<string, unknown>) => ({
+      return (data || []).map((doc: any) => ({
         id: doc.id,
         name: doc.name,
         description: doc.description,
@@ -311,11 +310,11 @@ export const documentsApi = {
         file_size: doc.file_size,
         file_type: doc.file_type,
         category: doc.category as Document['category'],
-        uploaded_by: doc.profiles?.display_name || 'Unknown User',
+        uploaded_by: 'User',
         is_public: doc.is_public,
         created_at: doc.created_at,
         updated_at: doc.updated_at
-      }));
+      })) as Document[];
     } catch (error) {
       console.error('Error fetching documents:', error);
       throw error;
@@ -339,10 +338,7 @@ export const documentsApi = {
           uploaded_by: userData.user.id,
           is_public: document.is_public
         })
-        .select(`
-          *,
-          profiles!documents_profile_id_fkey(display_name)
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
@@ -355,7 +351,7 @@ export const documentsApi = {
         file_size: data.file_size,
         file_type: data.file_type,
         category: data.category as Document['category'],
-        uploaded_by: data.profiles?.display_name || 'Unknown User',
+        uploaded_by: 'User',
         is_public: data.is_public,
         created_at: data.created_at,
         updated_at: data.updated_at
@@ -372,10 +368,7 @@ export const documentsApi = {
         .from('documents')
         .update(updates)
         .eq('id', id)
-        .select(`
-          *,
-          profiles!documents_profile_id_fkey(display_name)
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
@@ -388,7 +381,7 @@ export const documentsApi = {
         file_size: data.file_size,
         file_type: data.file_type,
         category: data.category as Document['category'],
-        uploaded_by: data.profiles?.display_name || 'Unknown User',
+        uploaded_by: 'User',
         is_public: data.is_public,
         created_at: data.created_at,
         updated_at: data.updated_at
