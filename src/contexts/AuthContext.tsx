@@ -141,6 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('Sign in error details:', error);
+        console.error('Error code:', error.status, error.message);
         return { error };
       }
       

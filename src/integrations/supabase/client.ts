@@ -13,8 +13,14 @@ if (!SUPABASE_URL) {
 }
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  console.error('Missing env vars:', { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY });
   throw new Error('Supabase env vars missing. Set VITE_SUPABASE_URL or VITE_SUPABASE_PROJECT_ID, and VITE_SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY.');
 }
+
+console.log('Supabase config:', { 
+  url: SUPABASE_URL, 
+  key: SUPABASE_PUBLISHABLE_KEY?.substring(0, 20) + '...' 
+});
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
