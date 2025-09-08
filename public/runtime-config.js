@@ -1,4 +1,3 @@
 window.__ENV = window.__ENV || {};
-// Set these before deploying to a static host without env support:
-// window.__ENV.VITE_SUPABASE_URL = "https://rttarliasydfffldayui.supabase.co";
-// window.__ENV.VITE_SUPABASE_ANON_KEY = "<YOUR_ANON_KEY>";
+window.__ENV.VITE_SUPABASE_URL = "https://rttarliasydfffldayui.supabase.co";
+window.__ENV.VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0dGFybGlhc3lkZmZmbGRheXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3ODQ4NDksImV4cCI6MjA3MTM2MDg0OX0.XmsnK94C_vk0ZfOZAywgH-yRtSgR0l3rxWvSHHcpZGo";
