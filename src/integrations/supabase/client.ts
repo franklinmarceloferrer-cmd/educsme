@@ -2,8 +2,11 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-let SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-let SUPABASE_PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) as string | undefined;
+// Prefer runtime config (window.__ENV) when available, then fall back to Vite envs
+// @ts-expect-error window may not be typed in SSR
+const RUNTIME_ENV = typeof window !== 'undefined' ? (window as any).__ENV || {} : {};
+let SUPABASE_URL = (RUNTIME_ENV.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL) as string | undefined;
+let SUPABASE_PUBLISHABLE_KEY = (RUNTIME_ENV.VITE_SUPABASE_ANON_KEY || RUNTIME_ENV.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) as string | undefined;
 
 if (!SUPABASE_URL) {
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string | undefined;
