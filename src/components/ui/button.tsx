@@ -49,11 +49,29 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, loading = false, children, disabled, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    const isDisabled = disabled || loading
+
+    // When using asChild, ensure Slot receives exactly ONE child element.
+    // Do not prepend a loader here; callers can render their own indicator inside.
+    if (asChild) {
+      return (
+        <Comp
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          // @ts-expect-error Slot will forward props to the child element
+          disabled={isDisabled}
+          {...props}
+        >
+          {children}
+        </Comp>
+      )
+    }
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
-        disabled={disabled || loading}
+        disabled={isDisabled}
         {...props}
       >
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}

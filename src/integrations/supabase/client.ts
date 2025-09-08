@@ -17,6 +17,13 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   throw new Error('Supabase env vars missing. Set VITE_SUPABASE_URL or VITE_SUPABASE_PROJECT_ID, and VITE_SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY.');
 }
 
+const isLikelyJwt = (token?: string) => typeof token === 'string' && token.split('.').length === 3;
+
+if (!isLikelyJwt(SUPABASE_PUBLISHABLE_KEY)) {
+  console.error('Supabase anon/publishable key appears invalid. Ensure you set VITE_SUPABASE_ANON_KEY to the Anonymous public key from Supabase Settings → API.');
+  throw new Error('Invalid Supabase anon key format.');
+}
+
 console.log('Supabase config:', { 
   url: SUPABASE_URL, 
   key: SUPABASE_PUBLISHABLE_KEY?.substring(0, 20) + '...' 

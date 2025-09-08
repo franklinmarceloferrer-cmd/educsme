@@ -97,6 +97,7 @@ az webapp config appsettings set `
                SCM_DO_BUILD_DURING_DEPLOYMENT="false" `
                WEBSITE_RUN_FROM_PACKAGE="1" `
                VITE_SUPABASE_URL="https://rttarliasydfffldayui.supabase.co" `
+               VITE_SUPABASE_ANON_KEY="$env:VITE_SUPABASE_ANON_KEY" `
                VITE_USE_DOTNET_API="false" `
                VITE_APP_ENVIRONMENT="production"
 
@@ -110,6 +111,7 @@ az webapp config appsettings set `
                SCM_DO_BUILD_DURING_DEPLOYMENT="false" `
                WEBSITE_RUN_FROM_PACKAGE="1" `
                VITE_SUPABASE_URL="https://rttarliasydfffldayui.supabase.co" `
+               VITE_SUPABASE_ANON_KEY="$env:VITE_SUPABASE_ANON_KEY" `
                VITE_USE_DOTNET_API="false" `
                VITE_APP_ENVIRONMENT="staging"
 
