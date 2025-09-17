@@ -58,7 +58,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         <Comp
           className={cn(buttonVariants({ variant, size, className }))}
           ref={ref}
-          // @ts-expect-error Slot will forward props to the child element
           disabled={isDisabled}
           {...props}
         >

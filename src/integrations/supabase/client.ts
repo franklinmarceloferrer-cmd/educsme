@@ -2,37 +2,18 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Prefer runtime config (window.__ENV) when available, then fall back to Vite envs
-// @ts-expect-error window may not be typed in SSR
-const RUNTIME_ENV = typeof window !== 'undefined' ? (window as any).__ENV || {} : {};
-let SUPABASE_URL = (RUNTIME_ENV.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL) as string | undefined;
-let SUPABASE_PUBLISHABLE_KEY = (RUNTIME_ENV.VITE_SUPABASE_ANON_KEY || RUNTIME_ENV.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) as string | undefined;
-
-// Normalize values (trim stray whitespace/newlines that break JWT format)
-SUPABASE_URL = SUPABASE_URL?.trim();
-SUPABASE_PUBLISHABLE_KEY = SUPABASE_PUBLISHABLE_KEY?.trim();
-
-if (!SUPABASE_URL) {
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string | undefined;
-  if (projectId) {
-    SUPABASE_URL = `https://${projectId}.supabase.co`;
-  }
-}
+// Lovable: Use fixed Supabase project config (avoid VITE_* runtime issues)
+const SUPABASE_URL = 'https://rttarliasydfffldayui.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0dGFybGlhc3lkZmZmbGRheXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3ODQ4NDksImV4cCI6MjA3MTM2MDg0OX0.XmsnK94C_vk0ZfOZAywgH-yRtSgR0l3rxWvSHHcpZGo';
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error('Missing env vars:', { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY });
-  throw new Error('Supabase env vars missing. Set VITE_SUPABASE_URL or VITE_SUPABASE_PROJECT_ID, and VITE_SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY.');
+  throw new Error('Supabase config missing');
 }
 
-const isLikelyJwt = (token?: string) => typeof token === 'string' && token.split('.').length === 3;
-
-if (!isLikelyJwt(SUPABASE_PUBLISHABLE_KEY)) {
-  console.warn('Supabase anon/publishable key appears invalid format. Proceeding anyway; if auth fails, verify Anonymous public key in runtime-config or env.');
-}
-
+// Optional: minimal debug
 console.log('Supabase config:', { 
   url: SUPABASE_URL, 
-  key: SUPABASE_PUBLISHABLE_KEY?.substring(0, 20) + '...' 
+  key: SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...' 
 });
 
 // Import the supabase client like this:
