@@ -179,6 +179,10 @@ export type Database = {
     }
     Functions: {
       get_role_count: { Args: { role_name: string }; Returns: number }
+      update_user_role: {
+        Args: { new_role: string; target_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
