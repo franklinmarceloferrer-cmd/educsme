@@ -4,8 +4,21 @@ import { StorageStatus } from "@/components/ui/storage-status";
 import { dashboardApi } from '@/lib/supabaseApi';
 import { Users, Megaphone, FileText, Activity } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { StudentDashboard } from "@/components/dashboard/StudentDashboard";
 
 export default function Dashboard() {
+  const { user } = useAuth();
+
+  // Show student dashboard for students
+  if (user?.role === 'student') {
+    return <StudentDashboard />;
+  }
+
+  // Admin/Teacher dashboard below
+  return <AdminDashboard />;
+}
+
+function AdminDashboard() {
   const { user } = useAuth();
 
   const { data: stats, isLoading: statsLoading } = useQuery({
