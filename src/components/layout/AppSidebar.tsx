@@ -6,7 +6,8 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  User
+  User,
+  UserCog
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -71,6 +72,12 @@ const navigation = [
     icon: BarChart3,
     adminOnly: true,
   },
+  {
+    title: "User Management",
+    url: "/admin/users",
+    icon: UserCog,
+    adminExclusive: true, // Only admins, not teachers
+  },
 ];
 
 export function AppSidebar() {
@@ -80,9 +87,11 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   
   // NOTE: This filtering is for UX only. Security is enforced by RoleProtectedRoute and RLS policies.
-  const filteredNavigation = navigation.filter(item => 
-    !item.adminOnly || hasRole('admin') || hasRole('teacher')
-  );
+  const filteredNavigation = navigation.filter(item => {
+    if (item.adminExclusive) return hasRole('admin');
+    if (item.adminOnly) return hasRole('admin') || hasRole('teacher');
+    return true;
+  });
 
   const getNavClasses = (url: string) => {
     const isActive = location.pathname === url;
