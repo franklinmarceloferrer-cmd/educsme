@@ -111,6 +111,13 @@ export const usersApi = {
   },
 };
 
+// Student Dashboard Data
+export interface StudentDashboardData {
+  recentAnnouncements: Announcement[];
+  recentDocuments: Document[];
+  urgentAnnouncements: Announcement[];
+}
+
 // Dashboard API
 export const dashboardApi = {
   getStats: async (): Promise<DashboardStats> => {
@@ -164,6 +171,70 @@ export const dashboardApi = {
     } catch (error) {
       console.error('Error fetching recent activity:', error);
       return [];
+    }
+  },
+
+  getStudentDashboard: async (): Promise<StudentDashboardData> => {
+    try {
+      const [announcementsResult, documentsResult, urgentResult] = await Promise.all([
+        // Recent published announcements
+        supabase
+          .from('announcements')
+          .select('*')
+          .eq('is_published', true)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        // Recent public documents
+        supabase
+          .from('documents')
+          .select('*')
+          .eq('is_public', true)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        // Urgent announcements
+        supabase
+          .from('announcements')
+          .select('*')
+          .eq('is_published', true)
+          .eq('category', 'urgent')
+          .order('created_at', { ascending: false })
+          .limit(3)
+      ]);
+
+      const mapAnnouncement = (a: any): Announcement => ({
+        ...a,
+        author: 'User',
+        category: a.category as Announcement['category'],
+        priority: a.priority as Announcement['priority'],
+        attachments: []
+      });
+
+      const mapDocument = (d: any): Document => ({
+        id: d.id,
+        name: d.name,
+        description: d.description,
+        file_url: d.file_url,
+        file_size: d.file_size,
+        file_type: d.file_type,
+        category: d.category as Document['category'],
+        uploaded_by: 'User',
+        is_public: d.is_public,
+        created_at: d.created_at,
+        updated_at: d.updated_at
+      });
+
+      return {
+        recentAnnouncements: (announcementsResult.data || []).map(mapAnnouncement),
+        recentDocuments: (documentsResult.data || []).map(mapDocument),
+        urgentAnnouncements: (urgentResult.data || []).map(mapAnnouncement)
+      };
+    } catch (error) {
+      console.error('Error fetching student dashboard:', error);
+      return {
+        recentAnnouncements: [],
+        recentDocuments: [],
+        urgentAnnouncements: []
+      };
     }
   }
 };
