@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { announcementsApi, type Announcement } from "@/lib/supabaseApi";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { sanitizeHtml } from "@/lib/sanitize";
 import {
   Dialog,
   DialogContent,
@@ -188,10 +189,10 @@ export default function Announcements() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+            <CardContent>
                 <div
                   className="text-muted-foreground line-clamp-3 prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: announcement.content }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(announcement.content) }}
                 />
               </CardContent>
             </Card>
@@ -265,7 +266,7 @@ export default function Announcements() {
           <div className="py-4">
             <div
               className="prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: selectedAnnouncement?.content || '' }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedAnnouncement?.content || '') }}
             />
           </div>
           <DialogFooter>

@@ -16,7 +16,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<{ error?: Error }>;
-  signUp: (email: string, password: string, displayName: string, role: UserRole) => Promise<{ error?: Error }>;
+  signUp: (email: string, password: string, displayName: string) => Promise<{ error?: Error }>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
   loading: boolean;
@@ -156,7 +156,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, displayName: string, role: UserRole) => {
+  // Security: Role is always defaulted to 'student' server-side
+  // Only admins can elevate user roles via database function
+  const signUp = async (email: string, password: string, displayName: string) => {
     try {
       // Clean up existing state
       cleanupAuthState();
@@ -169,8 +171,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            display_name: displayName,
-            role: role
+            display_name: displayName
+            // Role is NOT passed - always defaults to 'student' in handle_new_user trigger
           }
         }
       });

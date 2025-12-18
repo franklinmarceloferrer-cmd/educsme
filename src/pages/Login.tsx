@@ -13,7 +13,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [role, setRole] = useState<'student' | 'teacher' | 'admin'>('student');
+  // Role is always 'student' for security - admins must be elevated by existing admins
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { signIn, signUp, user } = useAuth();
@@ -48,7 +48,7 @@ export default function Login() {
     setError('');
 
     try {
-      const { error } = await signUp(email, password, displayName, role);
+      const { error } = await signUp(email, password, displayName);
       if (error) {
         setError(error.message);
       } else {
@@ -154,19 +154,9 @@ export default function Login() {
                       minLength={6}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Role</Label>
-                    <select
-                      id="role"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      value={role}
-                      onChange={(e) => setRole(e.target.value as 'student' | 'teacher' | 'admin')}
-                    >
-                      <option value="student">Student</option>
-                      <option value="teacher">Teacher</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    New accounts are created as students. Contact an administrator for role changes.
+                  </p>
                   <Button type="submit" variant="brand-blue" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign Up
