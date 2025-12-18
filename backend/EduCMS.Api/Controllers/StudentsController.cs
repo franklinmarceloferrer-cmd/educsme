@@ -2,6 +2,7 @@ using AutoMapper;
 using EduCMS.Api.Models;
 using EduCMS.Core.Entities;
 using EduCMS.Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -13,6 +14,7 @@ namespace EduCMS.Api.Controllers;
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
+[Authorize] // Require authentication on all endpoints
 public class StudentsController : ControllerBase
 {
     private readonly IStudentService _studentService;
