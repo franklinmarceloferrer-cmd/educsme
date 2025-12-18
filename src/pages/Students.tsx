@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Filter, Edit, Trash2, Download } from "lucide-react";
+import { Plus, Search, Download, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,24 +14,130 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StudentAvatarUpload } from "@/components/students/StudentAvatarUpload";
+import { StudentFormDialog } from "@/components/students/StudentFormDialog";
+import { DeleteStudentDialog } from "@/components/students/DeleteStudentDialog";
+import { StudentFilters } from "@/components/students/StudentFilters";
+import { EmptyStudentsState } from "@/components/students/EmptyStudentsState";
 import { studentsApi, type Student } from "@/lib/supabaseApi";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 export default function Students() {
   const { hasRole } = useAuth();
+  const queryClient = useQueryClient();
+  
+  // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
+  const [gradeFilter, setGradeFilter] = useState("");
+  const [sectionFilter, setSectionFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  
+  // Dialog states
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const { data: students, isLoading } = useQuery({
     queryKey: ['students'],
     queryFn: studentsApi.getAll,
   });
 
-  const filteredStudents = students?.filter(student =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.grade.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: studentsApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      setFormDialogOpen(false);
+      setSelectedStudent(null);
+      toast.success("Student added successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to add student: " + (error as Error).message);
+    },
+  });
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Student> }) =>
+      studentsApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      setFormDialogOpen(false);
+      setSelectedStudent(null);
+      toast.success("Student updated successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to update student: " + (error as Error).message);
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: studentsApi.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      setDeleteDialogOpen(false);
+      setSelectedStudent(null);
+      toast.success("Student deleted successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to delete student: " + (error as Error).message);
+    },
+  });
+
+  // Filter students
+  const filteredStudents = students?.filter(student => {
+    const matchesSearch = 
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.student_id.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesGrade = !gradeFilter || gradeFilter === "all" || student.grade === gradeFilter;
+    const matchesSection = !sectionFilter || sectionFilter === "all" || student.section === sectionFilter;
+    const matchesStatus = !statusFilter || statusFilter === "all" || student.status === statusFilter;
+    
+    return matchesSearch && matchesGrade && matchesSection && matchesStatus;
+  }) || [];
+
+  const hasFilters = !!searchTerm || (!!gradeFilter && gradeFilter !== "all") || 
+                     (!!sectionFilter && sectionFilter !== "all") || 
+                     (!!statusFilter && statusFilter !== "all");
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setGradeFilter("");
+    setSectionFilter("");
+    setStatusFilter("");
+  };
+
+  const handleAddStudent = () => {
+    setSelectedStudent(null);
+    setFormDialogOpen(true);
+  };
+
+  const handleEditStudent = (student: Student) => {
+    setSelectedStudent(student);
+    setFormDialogOpen(true);
+  };
+
+  const handleDeleteStudent = (student: Student) => {
+    setSelectedStudent(student);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleFormSubmit = (data: Omit<Student, 'id' | 'created_at' | 'updated_at' | 'avatar_url'>) => {
+    if (selectedStudent) {
+      updateMutation.mutate({ id: selectedStudent.id, data });
+    } else {
+      createMutation.mutate(data as Omit<Student, 'id' | 'created_at' | 'updated_at'>);
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    if (selectedStudent) {
+      deleteMutation.mutate(selectedStudent.id);
+    }
+  };
 
   const exportToCSV = () => {
     if (!students) return;
@@ -60,6 +166,7 @@ export default function Students() {
   };
 
   const canManage = hasRole('admin') || hasRole('teacher');
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -76,7 +183,7 @@ export default function Students() {
             Export CSV
           </Button>
           {canManage && (
-            <Button variant="brand-red">
+            <Button variant="brand-red" onClick={handleAddStudent}>
               <Plus className="h-4 w-4 mr-2" />
               Add Student
             </Button>
@@ -85,20 +192,25 @@ export default function Students() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search students..."
+            placeholder="Search by name, email, or ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9"
           />
         </div>
-        <Button variant="outline">
-          <Filter className="h-4 w-4 mr-2" />
-          Filter
-        </Button>
+        <StudentFilters
+          gradeFilter={gradeFilter}
+          sectionFilter={sectionFilter}
+          statusFilter={statusFilter}
+          onGradeChange={setGradeFilter}
+          onSectionChange={setSectionFilter}
+          onStatusChange={setStatusFilter}
+          onClearFilters={clearFilters}
+        />
       </div>
 
       {/* Students Table */}
@@ -106,7 +218,7 @@ export default function Students() {
         <CardHeader>
           <CardTitle>Student Directory</CardTitle>
           <CardDescription>
-            A list of all enrolled students with their basic information
+            {filteredStudents.length} student{filteredStudents.length !== 1 ? 's' : ''} found
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -123,6 +235,13 @@ export default function Students() {
                 </div>
               ))}
             </div>
+          ) : filteredStudents.length === 0 ? (
+            <EmptyStudentsState
+              hasFilters={hasFilters}
+              canManage={canManage}
+              onAddStudent={handleAddStudent}
+              onClearFilters={clearFilters}
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -164,10 +283,18 @@ export default function Students() {
                     {canManage && (
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="sm">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditStudent(student)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteStudent(student)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -180,6 +307,23 @@ export default function Students() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <StudentFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        student={selectedStudent}
+        onSubmit={handleFormSubmit}
+        isLoading={isSubmitting}
+      />
+
+      <DeleteStudentDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        student={selectedStudent}
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 }
