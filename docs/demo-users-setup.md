@@ -1,68 +1,94 @@
-# Demo Users Setup Guide
+# EduCMS Demo & Seed Data Guide
 
-## Problem
-Getting a 400 error when trying to sign in with the demo credentials shown on the login page:
-- admin@edu-cms.com / password
-- teacher@edu-cms.com / password  
-- student@edu-cms.com / password
+## Overview
 
-## Root Cause
-The demo users don't exist in your Supabase Auth system. The credentials shown are just placeholders.
+EduCMS comes pre-seeded with realistic educational data to demonstrate the system's capabilities. This makes it ready for portfolio presentations, technical interviews, and feature demonstrations.
 
-## Solution Options
+## Seed Data Included
 
-### Option 1: Run the Migration (Recommended)
-1. Go to your Supabase Dashboard: https://supabase.com/dashboard/project/rttarliasydfffldayui
-2. Navigate to **SQL Editor**
-3. Copy and paste the contents of `supabase/migrations/20250826000000_create_demo_users.sql`
-4. Click **Run** to execute the migration
-5. The demo users will be created with confirmed emails
+### Students (10 records)
+- Mix of grades (9th, 10th, 11th, 12th)
+- Different sections (A, B, C)
+- Varied enrollment dates and statuses
+- Brazilian-style names and addresses for authenticity
 
-### Option 2: Use the Setup Script
-1. Install dependencies: `npm install`
-2. Run the setup script: `node scripts/setup-demo-users.js`
-3. When prompted, provide:
-   - Your Supabase URL: `https://rttarliasydfffldayui.supabase.co`
-   - Your Service Role Key (from Supabase Dashboard → Settings → API)
+### Announcements (5 records)
+- Welcome announcement (high priority)
+- Academic calendar notice
+- Mid-term exam schedule
+- Library hours update
+- Code of conduct notice
 
-### Option 3: Create Users Manually
-1. Go to Supabase Dashboard → Authentication → Users
-2. Click **Add User**
-3. Create each demo user:
-   - Email: admin@edu-cms.com, Password: password
-   - Email: teacher@edu-cms.com, Password: password
-   - Email: student@edu-cms.com, Password: password
-4. For each user, set the user metadata:
-   ```json
-   {
-     "display_name": "System Administrator", 
-     "role": "admin"
-   }
-   ```
+### Documents (5 records)
+- Student Handbook 2025
+- Academic Calendar 2025
+- Mid-Term Exam Timetable
+- Code of Conduct Policy
+- Course Catalog 2025
 
-### Option 4: Sign Up New Users
-Instead of using the demo credentials, create new accounts:
-1. Go to the Sign Up tab on the login page
-2. Create a new account with your email
-3. Check your email for confirmation (if required)
-4. Sign in with your new credentials
+## User Account Setup
 
-## What Gets Created
-The migration/script creates:
-- 3 demo users with confirmed emails
-- Corresponding profiles with proper roles
-- Sample student records for testing
-- A sample announcement
+### Creating Your Account
+1. Navigate to the login page
+2. Click "Sign Up" tab
+3. Enter your details (display name, email, password)
+4. Your account will be created with the **student** role
 
-## Verification
-After setup, you should be able to:
-1. Sign in with any demo account
-2. See role-appropriate content (admin sees everything, students see limited content)
-3. Navigate through the dashboard without errors
+### Role Elevation (Security)
+For security reasons, new users always start as students. Role elevation requires:
+- An existing admin to use the admin panel
+- Or direct database access via the `update_user_role()` function
 
-## Security Note
-In production:
-- Remove or change demo user passwords
-- Use strong passwords
+```sql
+-- Example: Elevate user to admin (requires admin privileges)
+SELECT update_user_role('user-uuid-here', 'admin');
+```
+
+## Available Roles
+
+| Role | Capabilities |
+|------|-------------|
+| **Admin** | Full system control, user management, all CRUD operations |
+| **Teacher** | Create announcements, manage documents, view students |
+| **Student** | View public announcements and documents, view own profile |
+
+## For Portfolio Demonstrations
+
+When presenting this project, you can highlight:
+
+✅ **Role-based Access Control** - Different views for admin/teacher/student  
+✅ **Complete CRUD Operations** - Create, read, update, delete with real data  
+✅ **Professional Data Modeling** - Realistic educational content  
+✅ **Secure Role Management** - Database-enforced role protection  
+✅ **Modern UI/UX** - Responsive design with light/dark themes  
+
+## Technical Implementation
+
+### Security Features
+- Row Level Security (RLS) on all tables
+- Role validation at database level
+- No client-side role elevation possible
+- Server-side access control enforcement
+
+### Data Categories
+
+**Announcements**: `general`, `urgent`, `academic`, `event`  
+**Documents**: `general`, `academic`, `administrative`, `policy`  
+**Priorities**: `low`, `medium`, `high`  
+
+## Resetting Seed Data
+
+To reset the database with fresh seed data:
+
+1. Clear existing data (optional)
+2. Re-run the seed SQL scripts
+3. Recreate user accounts as needed
+
+## Production Deployment Notes
+
+In production environments:
+- Remove or replace seed data with real content
+- Use strong, unique passwords for all accounts
 - Enable email confirmation
-- Consider removing demo users entirely
+- Review and tighten RLS policies as needed
+- Set up proper backup procedures
