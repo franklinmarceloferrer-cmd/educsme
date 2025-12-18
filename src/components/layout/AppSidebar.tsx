@@ -33,6 +33,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+/**
+ * Navigation items configuration
+ * 
+ * SECURITY NOTE: The 'adminOnly' flag is used for UI filtering only (UX improvement).
+ * Actual security enforcement is handled by:
+ * 1. RoleProtectedRoute component - blocks unauthorized route access
+ * 2. RLS policies on database - enforces data access control server-side
+ * 
+ * Hiding menu items improves UX but is NOT a security measure.
+ */
 const navigation = [
   {
     title: "Dashboard",
@@ -69,6 +79,7 @@ export function AppSidebar() {
   const { user, signOut, hasRole } = useAuth();
   const collapsed = state === "collapsed";
   
+  // NOTE: This filtering is for UX only. Security is enforced by RoleProtectedRoute and RLS policies.
   const filteredNavigation = navigation.filter(item => 
     !item.adminOnly || hasRole('admin') || hasRole('teacher')
   );
