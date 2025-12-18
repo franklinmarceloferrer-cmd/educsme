@@ -172,18 +172,10 @@ export default function Login() {
             )}
 
             {import.meta.env.DEV && (
-              <div className="mt-6 text-center text-sm text-muted-foreground">
-                <p className="text-orange-600 font-medium">⚠️ Demo users need to be created first!</p>
-                <p className="mt-2">Create a test account using the Sign Up tab above, or</p>
-                <p>Run the SQL script from create-demo-users.sql in your Supabase dashboard</p>
-                <details className="mt-2 text-xs">
-                  <summary className="cursor-pointer text-blue-600">Show demo credentials (after setup)</summary>
-                  <div className="mt-1">
-                    <p>Admin: admin@edu-cms.com / password</p>
-                    <p>Teacher: teacher@edu-cms.com / password</p>
-                    <p>Student: student@edu-cms.com / password</p>
-                  </div>
-                </details>
+              <div className="mt-6 p-3 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
+                <p className="font-medium text-foreground">📚 Portfolio Demo</p>
+                <p className="mt-1">This system includes seed data for demonstration purposes.</p>
+                <p className="text-xs mt-2">New accounts start as students. Admins can elevate roles via the admin panel.</p>
               </div>
             )}
           </CardContent>
