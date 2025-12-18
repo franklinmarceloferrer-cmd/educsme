@@ -80,7 +80,7 @@ export const dashboardApi = {
 
       // Count teachers using secure function
       const { data: teacherCountData } = await supabase.rpc('get_role_count', { 
-        target_role: 'teacher' 
+        role_name: 'teacher' 
       });
       const teacherCount = teacherCountData || 0;
 
