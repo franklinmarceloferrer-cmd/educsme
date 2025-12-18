@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Header } from "@/components/layout/Header";
+import { RoleProtectedRoute } from "@/components/auth/RoleProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Announcements from "./pages/Announcements";
 import Students from "./pages/Students";
@@ -89,9 +90,11 @@ const App = () => (
                   path="/students"
                   element={
                     <ProtectedRoute>
-                      <AppLayout>
-                        <Students />
-                      </AppLayout>
+                      <RoleProtectedRoute allowedRoles={['admin', 'teacher']}>
+                        <AppLayout>
+                          <Students />
+                        </AppLayout>
+                      </RoleProtectedRoute>
                     </ProtectedRoute>
                   }
                 />
@@ -109,9 +112,11 @@ const App = () => (
                   path="/reports"
                   element={
                     <ProtectedRoute>
-                      <AppLayout>
-                        <Reports />
-                      </AppLayout>
+                      <RoleProtectedRoute allowedRoles={['admin', 'teacher']}>
+                        <AppLayout>
+                          <Reports />
+                        </AppLayout>
+                      </RoleProtectedRoute>
                     </ProtectedRoute>
                   }
                 />
