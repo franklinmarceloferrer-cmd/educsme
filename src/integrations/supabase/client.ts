@@ -2,19 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Lovable: Use fixed Supabase project config (avoid VITE_* runtime issues)
-const SUPABASE_URL = 'https://rttarliasydfffldayui.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0dGFybGlhc3lkZmZmbGRheXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3ODQ4NDksImV4cCI6MjA3MTM2MDg0OX0.XmsnK94C_vk0ZfOZAywgH-yRtSgR0l3rxWvSHHcpZGo';
-
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error('Supabase config missing');
-}
-
-// Optional: minimal debug
-console.log('Supabase config:', { 
-  url: SUPABASE_URL, 
-  key: SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...' 
-});
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
