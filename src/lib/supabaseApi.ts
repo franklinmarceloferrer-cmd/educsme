@@ -68,6 +68,49 @@ export interface Document {
   updated_at: string;
 }
 
+export interface Profile {
+  id: string;
+  user_id: string;
+  display_name: string;
+  email: string;
+  role: string;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Users API (Admin only)
+export const usersApi = {
+  getAll: async (): Promise<Profile[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      throw error;
+    }
+  },
+
+  updateRole: async (userId: string, newRole: string): Promise<void> => {
+    try {
+      const { error } = await supabase.rpc('update_user_role', {
+        target_user_id: userId,
+        new_role: newRole,
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      throw error;
+    }
+  },
+};
+
 // Dashboard API
 export const dashboardApi = {
   getStats: async (): Promise<DashboardStats> => {

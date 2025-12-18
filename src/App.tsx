@@ -15,6 +15,7 @@ import Announcements from "./pages/Announcements";
 import Students from "./pages/Students";
 import Documents from "./pages/Documents";
 import Reports from "./pages/Reports";
+import UserManagement from "./pages/UserManagement";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
@@ -116,10 +117,22 @@ const App = () => (
                         <AppLayout>
                           <Reports />
                         </AppLayout>
-                      </RoleProtectedRoute>
-                    </ProtectedRoute>
-                  }
-                />
+                    </RoleProtectedRoute>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute>
+                    <RoleProtectedRoute allowedRoles={['admin']}>
+                      <AppLayout>
+                        <UserManagement />
+                      </AppLayout>
+                    </RoleProtectedRoute>
+                  </ProtectedRoute>
+                }
+              />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Router>
