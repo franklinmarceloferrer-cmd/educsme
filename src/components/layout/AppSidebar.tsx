@@ -47,7 +47,7 @@ import {
 const navigation = [
   {
     title: "Dashboard",
-    url: "/",
+    url: "/dashboard",
     icon: LayoutDashboard,
   },
   {
