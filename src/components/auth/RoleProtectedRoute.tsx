@@ -23,7 +23,7 @@ interface RoleProtectedRouteProps {
 export function RoleProtectedRoute({ 
   children, 
   allowedRoles, 
-  fallbackPath = "/" 
+  fallbackPath = "/dashboard" 
 }: RoleProtectedRouteProps) {
   const { user, hasRole, loading } = useAuth();
   
