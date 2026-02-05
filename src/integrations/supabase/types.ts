@@ -125,6 +125,54 @@ export type Database = {
         }
         Relationships: []
       }
+      student_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          grade: string
+          id: string
+          invited_by: string | null
+          name: string
+          section: string
+          status: string
+          student_id: string | null
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          grade: string
+          id?: string
+          invited_by?: string | null
+          name: string
+          section: string
+          status?: string
+          student_id?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          grade?: string
+          id?: string
+          invited_by?: string | null
+          name?: string
+          section?: string
+          status?: string
+          student_id?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           address: string | null
