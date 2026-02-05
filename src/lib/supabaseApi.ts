@@ -68,6 +68,22 @@ export interface Document {
   updated_at: string;
 }
 
+export interface StudentInvite {
+  id: string;
+  email: string;
+  student_id: string | null;
+  name: string;
+  grade: string;
+  section: string;
+  token: string;
+  status: 'pending' | 'accepted' | 'expired' | 'revoked';
+  invited_by: string | null;
+  expires_at: string;
+  accepted_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Profile {
   id: string;
   user_id: string;
@@ -520,4 +536,97 @@ export const documentsApi = {
     }
   },
 
+};
+
+// Student Invites API
+export const invitesApi = {
+  getAll: async (): Promise<StudentInvite[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('student_invites')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as StudentInvite[];
+    } catch (error) {
+      console.error('Error fetching invites:', error);
+      throw error;
+    }
+  },
+
+  create: async (invite: {
+    email: string;
+    name: string;
+    grade: string;
+    section: string;
+    student_id?: string;
+  }): Promise<StudentInvite> => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('User not authenticated');
+
+      // Check if email already has a pending invite
+      const { data: existingInvite } = await supabase
+        .from('student_invites')
+        .select('id')
+        .eq('email', invite.email)
+        .eq('status', 'pending')
+        .single();
+
+      if (existingInvite) {
+        throw new Error('Já existe um convite pendente para este email');
+      }
+
+      const { data, error } = await supabase
+        .from('student_invites')
+        .insert({
+          ...invite,
+          invited_by: userData.user.id,
+        })
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      return data as StudentInvite;
+    } catch (error) {
+      console.error('Error creating invite:', error);
+      throw error;
+    }
+  },
+
+  revoke: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('student_invites')
+        .update({ status: 'revoked' })
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error revoking invite:', error);
+      throw error;
+    }
+  },
+
+  getByToken: async (token: string): Promise<StudentInvite | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('student_invites')
+        .select('*')
+        .eq('token', token)
+        .eq('status', 'pending')
+        .gt('expires_at', new Date().toISOString())
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') return null; // No rows found
+        throw error;
+      }
+      return data as StudentInvite;
+    } catch (error) {
+      console.error('Error fetching invite by token:', error);
+      return null;
+    }
+  },
 };

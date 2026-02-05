@@ -18,6 +18,7 @@ import Documents from "./pages/Documents";
 import Reports from "./pages/Reports";
 import UserManagement from "./pages/UserManagement";
 import Login from "./pages/Login";
+import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/invite/:token" element={<AcceptInvite />} />
                 <Route
                   path="/dashboard"
                   element={
