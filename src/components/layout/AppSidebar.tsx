@@ -56,6 +56,12 @@ const navigation = [
     icon: Megaphone,
   },
   {
+    title: "My Profile",
+    url: "/profile",
+    icon: User,
+    studentOnly: true,
+  },
+  {
     title: "Students",
     url: "/students",
     icon: Users,
@@ -76,7 +82,7 @@ const navigation = [
     title: "User Management",
     url: "/admin/users",
     icon: UserCog,
-    adminExclusive: true, // Only admins, not teachers
+    adminExclusive: true,
   },
 ];
 
@@ -90,6 +96,7 @@ export function AppSidebar() {
   const filteredNavigation = navigation.filter(item => {
     if (item.adminExclusive) return hasRole('admin');
     if (item.adminOnly) return hasRole('admin') || hasRole('teacher');
+    if (item.studentOnly) return hasRole('student');
     return true;
   });
 

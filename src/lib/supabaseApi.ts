@@ -418,6 +418,48 @@ export const studentsApi = {
       console.error('Error deleting student:', error);
       throw error;
     }
+  },
+
+  getById: async (id: string): Promise<Student | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) return null;
+      
+      return {
+        ...data,
+        status: data.status as Student['status']
+      };
+    } catch (error) {
+      console.error('Error fetching student by id:', error);
+      return null;
+    }
+  },
+
+  getByEmail: async (email: string): Promise<Student | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) return null;
+      
+      return {
+        ...data,
+        status: data.status as Student['status']
+      };
+    } catch (error) {
+      console.error('Error fetching student by email:', error);
+      return null;
+    }
   }
 };
 
