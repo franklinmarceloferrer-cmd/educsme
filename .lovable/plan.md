@@ -1,260 +1,243 @@
 
 
-## Plano: Sistema de Convites para Estudantes
+## Plano: Pagina de Perfil do Estudante
 
 ### Visao Geral
-Implementar um sistema completo que permite a administradores e professores convidar estudantes para a plataforma EduCMS. O estudante recebe um link exclusivo para criar sua conta com dados pre-preenchidos.
+Criar uma pagina de perfil que permite aos estudantes visualizar e editar suas informacoes pessoais. A pagina sera acessivel tanto para estudantes (com edicao limitada) quanto para staff (admin/teacher com edicao completa).
 
 ---
 
-### Arquitetura do Sistema
+### Arquitetura da Pagina
 
 ```text
-+------------------+     +-------------------+     +------------------+
-|  Admin/Teacher   | --> | student_invites   | --> | Link de Convite  |
-|  (Convida)       |     | (tabela)          |     | (Copiavel)       |
-+------------------+     +-------------------+     +------------------+
-                                                          |
-                                                          v
-                               +------------------------------------------+
-                               | Estudante acessa /invite/:token         |
-                               | - Ve dados pre-preenchidos              |
-                               | - Cria senha                            |
-                               | - Conta + registro student criados      |
-                               +------------------------------------------+
++--------------------------------------------------+
+|  [Avatar]                                        |
+|   Nome do Estudante                              |
+|   ID: STU001 | Grade: 10th | Section: A          |
++--------------------------------------------------+
+|                                                  |
+|  INFORMACOES PESSOAIS                            |
+|  +--------------------+  +--------------------+  |
+|  | Email              |  | Telefone           |  |
+|  | john@example.com   |  | +1 234 567 8900    |  |
+|  +--------------------+  +--------------------+  |
+|                                                  |
+|  +--------------------------------------------+  |
+|  | Endereco                                   |  |
+|  | 123 Main Street, City                      |  |
+|  +--------------------------------------------+  |
+|                                                  |
+|  INFORMACOES ACADEMICAS                          |
+|  +--------------------+  +--------------------+  |
+|  | Data de Matricula  |  | Status             |  |
+|  | 15/03/2024         |  | Ativo              |  |
+|  +--------------------+  +--------------------+  |
+|                                                  |
+|  [Editar Perfil]                                 |
+|                                                  |
++--------------------------------------------------+
 ```
 
 ---
 
-### 1. Database Migration
+### 1. Nova Pagina: `src/pages/StudentProfile.tsx`
 
-**Criar tabela `student_invites`:**
+**Funcionalidades:**
 
-```sql
--- Tabela de convites
-CREATE TABLE public.student_invites (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email TEXT NOT NULL,
-  student_id TEXT,
-  name TEXT NOT NULL,
-  grade TEXT NOT NULL,
-  section TEXT NOT NULL,
-  token UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired', 'revoked')),
-  invited_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '7 days'),
-  accepted_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
+1. **Visualizacao do Perfil**
+   - Avatar com opcao de upload (usando componente existente `StudentAvatarUpload`)
+   - Informacoes pessoais: nome, email, telefone, endereco
+   - Informacoes academicas: student_id, grade, section, enrollment_date, status
+   - Layout responsivo com cards organizados
 
--- Habilitar RLS
-ALTER TABLE public.student_invites ENABLE ROW LEVEL SECURITY;
+2. **Edicao do Perfil**
+   - Dialog/modal para edicao (similar ao `StudentFormDialog`)
+   - Estudantes podem editar: telefone, endereco
+   - Staff pode editar: todos os campos (nome, email, grade, section, status, etc.)
 
--- Policies: Staff pode gerenciar convites
-CREATE POLICY "Staff can view invites" ON public.student_invites
-  FOR SELECT TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM profiles WHERE user_id = auth.uid() AND role IN ('admin', 'teacher')
-  ));
-
-CREATE POLICY "Staff can create invites" ON public.student_invites
-  FOR INSERT TO authenticated
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM profiles WHERE user_id = auth.uid() AND role IN ('admin', 'teacher')
-  ));
-
-CREATE POLICY "Staff can update invites" ON public.student_invites
-  FOR UPDATE TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM profiles WHERE user_id = auth.uid() AND role IN ('admin', 'teacher')
-  ));
-
-CREATE POLICY "Staff can delete invites" ON public.student_invites
-  FOR DELETE TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM profiles WHERE user_id = auth.uid() AND role IN ('admin', 'teacher')
-  ));
-
--- Policy publica para validar token (anon users)
-CREATE POLICY "Anyone can validate invite token" ON public.student_invites
-  FOR SELECT TO anon
-  USING (token = token AND status = 'pending' AND expires_at > now());
-
--- Trigger para updated_at
-CREATE TRIGGER update_student_invites_updated_at
-  BEFORE UPDATE ON public.student_invites
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
-```
+3. **Busca do Registro do Estudante**
+   - Para estudantes: busca pelo email do perfil autenticado
+   - Para staff: pode acessar qualquer perfil via parametro de URL
 
 ---
 
-### 2. Edge Function: `accept-student-invite`
+### 2. Atualizacoes na API
 
-**Arquivo:** `supabase/functions/accept-student-invite/index.ts`
+**Arquivo:** `src/lib/supabaseApi.ts`
 
-Esta funcao sera chamada quando o estudante aceitar o convite e criar sua conta:
-
-- Validar token (existe, nao expirado, status pending)
-- Criar usuario no auth.users via Supabase Admin
-- O trigger `handle_new_user` cria o profile automaticamente
-- Criar registro na tabela `students`
-- Marcar convite como `accepted`
+Adicionar novo metodo no `studentsApi`:
 
 ```typescript
-// Estrutura:
-// 1. Receber { token, password }
-// 2. Validar token
-// 3. Criar usuario com supabase.auth.admin.createUser()
-// 4. Criar student record
-// 5. Atualizar invite status para 'accepted'
-// 6. Retornar sucesso
-```
+// Buscar estudante pelo email (para o proprio estudante)
+getByEmail: async (email: string): Promise<Student | null> => {
+  const { data, error } = await supabase
+    .from('students')
+    .select('*')
+    .eq('email', email)
+    .single();
+  
+  if (error) return null;
+  return data;
+}
 
----
-
-### 3. Novos Componentes Frontend
-
-#### 3.1 `InviteStudentDialog.tsx`
-- Formulario: email, nome, grade, section, student_id (opcional)
-- Botao "Criar Convite"
-- Apos criar, exibe link copiavel
-- Validacao com Zod
-
-#### 3.2 `PendingInvitesList.tsx`
-- Tabela com convites pendentes
-- Colunas: Nome, Email, Grade, Status, Expira em, Acoes
-- Acoes: Copiar Link, Reenviar, Revogar
-
-#### 3.3 `InviteLinkCopyDialog.tsx`
-- Modal que exibe o link de convite apos criacao
-- Botao para copiar link
-- Instrucoes para enviar ao estudante
-
----
-
-### 4. Nova Pagina: `AcceptInvite.tsx`
-
-**Rota:** `/invite/:token` (publica, sem autenticacao)
-
-- Validar token via query
-- Se valido: mostrar formulario com dados pre-preenchidos
-- Estudante so precisa criar senha
-- Submit: chamar edge function `accept-student-invite`
-- Sucesso: redirecionar para login com mensagem
-
----
-
-### 5. Atualizacoes em Arquivos Existentes
-
-#### 5.1 `src/App.tsx`
-Adicionar rota publica:
-```tsx
-<Route path="/invite/:token" element={<AcceptInvite />} />
-```
-
-#### 5.2 `src/pages/Students.tsx`
-- Adicionar botao "Convidar Estudante" ao lado de "Add Student"
-- Adicionar tab ou secao colapsavel para "Convites Pendentes"
-
-#### 5.3 `src/lib/supabaseApi.ts`
-Adicionar `invitesApi`:
-```typescript
-export const invitesApi = {
-  getAll: async () => { /* lista convites */ },
-  create: async (data) => { /* cria convite */ },
-  revoke: async (id) => { /* status = 'revoked' */ },
-  validateToken: async (token) => { /* valida token */ },
-  getByToken: async (token) => { /* busca convite por token */ },
-};
-```
-
----
-
-### 6. Interface do Convite
-
-**Interface TypeScript:**
-```typescript
-export interface StudentInvite {
-  id: string;
-  email: string;
-  student_id: string | null;
-  name: string;
-  grade: string;
-  section: string;
-  token: string;
-  status: 'pending' | 'accepted' | 'expired' | 'revoked';
-  invited_by: string | null;
-  expires_at: string;
-  accepted_at: string | null;
-  created_at: string;
-  updated_at: string;
+// Buscar estudante por ID
+getById: async (id: string): Promise<Student | null> => {
+  const { data, error } = await supabase
+    .from('students')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) return null;
+  return data;
 }
 ```
 
 ---
 
-### 7. Fluxo Completo
+### 3. Novo Componente: `StudentProfileEditDialog.tsx`
 
-```text
-1. Admin/Teacher acessa /students
-2. Clica em "Convidar Estudante"
-3. Preenche: email, nome, grade, section
-4. Sistema cria convite no banco
-5. Modal exibe link: educsme.lovable.app/invite/{token}
-6. Admin copia e envia link (WhatsApp, email pessoal, etc.)
-7. Estudante acessa o link
-8. Ve seus dados pre-preenchidos
-9. Cria uma senha
-10. Sistema:
-    - Cria conta via edge function (auth.admin.createUser)
-    - Cria registro em students
-    - Marca convite como aceito
-11. Estudante e redirecionado para /login
-12. Estudante faz login e acessa o dashboard
+**Arquivo:** `src/components/students/StudentProfileEditDialog.tsx`
+
+- Reutiliza a estrutura do `StudentFormDialog`
+- Adapta os campos editaveis baseado no role do usuario
+- Estudantes: apenas telefone e endereco
+- Staff: todos os campos
+
+---
+
+### 4. Atualizacoes no Roteamento
+
+**Arquivo:** `src/App.tsx`
+
+```typescript
+// Adicionar novas rotas
+<Route path="/profile" element={
+  <ProtectedRoute>
+    <AppLayout>
+      <StudentProfile />
+    </AppLayout>
+  </ProtectedRoute>
+} />
+
+<Route path="/students/:id" element={
+  <ProtectedRoute>
+    <RoleProtectedRoute allowedRoles={['admin', 'teacher']}>
+      <AppLayout>
+        <StudentProfile />
+      </AppLayout>
+    </RoleProtectedRoute>
+  </ProtectedRoute>
+} />
 ```
 
 ---
 
-### 8. Arquivos a Criar
+### 5. Atualizacoes na Navegacao
+
+**Arquivo:** `src/components/layout/AppSidebar.tsx`
+
+Adicionar link "Meu Perfil" para estudantes:
+
+```typescript
+{
+  title: "My Profile",
+  url: "/profile",
+  icon: User,
+  studentOnly: true, // Apenas para estudantes
+}
+```
+
+**Arquivo:** `src/pages/Students.tsx`
+
+Adicionar link para ver perfil individual na tabela:
+
+```typescript
+// Na coluna de acoes, adicionar botao de "Ver Perfil"
+<Button onClick={() => navigate(`/students/${student.id}`)}>
+  <Eye className="h-4 w-4" />
+</Button>
+```
+
+---
+
+### 6. Componentes da Pagina de Perfil
+
+**Secoes:**
+
+1. **Header do Perfil**
+   - Avatar grande com opcao de edicao
+   - Nome e informacoes basicas
+   - Badge de status
+
+2. **Card de Informacoes Pessoais**
+   - Email (somente leitura para estudantes)
+   - Telefone (editavel)
+   - Endereco (editavel)
+
+3. **Card de Informacoes Academicas**
+   - Student ID (somente leitura)
+   - Grade e Section
+   - Data de matricula
+   - Status (badge colorido)
+
+4. **Acoes**
+   - Botao "Editar Perfil" abre dialog de edicao
+   - Feedback visual ao salvar
+
+---
+
+### Arquivos a Criar
 
 | Arquivo | Descricao |
 |---------|-----------|
-| Migration SQL | Criar tabela `student_invites` |
-| `supabase/functions/accept-student-invite/index.ts` | Edge function |
-| `src/pages/AcceptInvite.tsx` | Pagina publica de aceitar convite |
-| `src/components/students/InviteStudentDialog.tsx` | Dialog para convidar |
-| `src/components/students/PendingInvitesList.tsx` | Lista de convites |
-| `src/components/students/InviteLinkCopyDialog.tsx` | Dialog com link copiavel |
+| `src/pages/StudentProfile.tsx` | Pagina principal do perfil |
+| `src/components/students/StudentProfileEditDialog.tsx` | Dialog de edicao do perfil |
+| `src/components/students/ProfileInfoCard.tsx` | Card reutilizavel para informacoes |
 
-### 9. Arquivos a Modificar
+### Arquivos a Modificar
 
 | Arquivo | Alteracao |
 |---------|-----------|
-| `src/App.tsx` | Adicionar rota `/invite/:token` |
-| `src/pages/Students.tsx` | Adicionar botao e secao de convites |
-| `src/lib/supabaseApi.ts` | Adicionar `invitesApi` |
+| `src/App.tsx` | Adicionar rotas `/profile` e `/students/:id` |
+| `src/components/layout/AppSidebar.tsx` | Adicionar link "Meu Perfil" |
+| `src/lib/supabaseApi.ts` | Adicionar `getByEmail` e `getById` no studentsApi |
+| `src/pages/Students.tsx` | Adicionar link para perfil na tabela |
+
+---
+
+### Fluxo de Uso
+
+**Para Estudantes:**
+1. Estudante faz login
+2. Clica em "Meu Perfil" no sidebar
+3. Ve suas informacoes
+4. Pode editar telefone e endereco
+5. Salva alteracoes
+
+**Para Staff:**
+1. Staff acessa pagina de estudantes
+2. Clica em "Ver Perfil" de um estudante
+3. Acessa `/students/:id`
+4. Ve todas as informacoes
+5. Pode editar qualquer campo
 
 ---
 
 ### Consideracoes de Seguranca
 
-1. **Tokens UUID** - Dificeis de adivinhar
-2. **Expiracao de 7 dias** - Convites nao ficam validos eternamente
-3. **RLS policies** - Apenas staff pode criar/ver convites
-4. **Edge function com service role** - Permite criar usuarios sem expor service key
-5. **Validacao de email duplicado** - Verificar antes de criar convite
-6. **Revogacao** - Staff pode cancelar convites pendentes
+1. **RLS ja configurada** - Estudantes so podem ver seu proprio registro (via email match)
+2. **Edicao limitada** - Frontend restringe campos editaveis por role
+3. **Validacao de dados** - Zod schema para validar inputs
+4. **Permissoes de rota** - RoleProtectedRoute para rotas de staff
 
 ---
 
-### Nota sobre Email
+### Design Visual
 
-Como **nao ha RESEND_API_KEY configurada**, o sistema usara **links manuais**:
-- Admin/Teacher copia o link de convite
-- Envia por WhatsApp, email pessoal, ou outro meio
-- Isso evita dependencia de servico de email externo
-
-Se desejar envio automatico de emails no futuro, basta configurar o Resend e adicionar uma chamada na edge function.
+- Usar componentes UI existentes (Card, Badge, Avatar, Dialog)
+- Seguir paleta de cores brand-red e brand-blue
+- Layout responsivo com grid
+- Estados de loading com skeletons
+- Feedback visual com toast ao salvar
 
