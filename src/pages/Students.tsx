@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Download, Edit, Trash2, Mail, Users, Clock } from "lucide-react";
+import { Plus, Search, Download, Edit, Trash2, Mail, Users, Clock, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +27,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 export default function Students() {
+  const navigate = useNavigate();
   const { hasRole } = useAuth();
   const queryClient = useQueryClient();
   
@@ -339,6 +341,14 @@ export default function Students() {
                         {canManage && (
                           <TableCell>
                             <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => navigate(`/students/${student.id}`)}
+                                title="Ver Perfil"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"

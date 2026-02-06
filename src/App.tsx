@@ -17,6 +17,7 @@ import Students from "./pages/Students";
 import Documents from "./pages/Documents";
 import Reports from "./pages/Reports";
 import UserManagement from "./pages/UserManagement";
+import StudentProfile from "./pages/StudentProfile";
 import Login from "./pages/Login";
 import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
@@ -132,6 +133,28 @@ const App = () => (
                     <RoleProtectedRoute allowedRoles={['admin']}>
                       <AppLayout>
                         <UserManagement />
+                      </AppLayout>
+                    </RoleProtectedRoute>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <StudentProfile />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/students/:id"
+                element={
+                  <ProtectedRoute>
+                    <RoleProtectedRoute allowedRoles={['admin', 'teacher']}>
+                      <AppLayout>
+                        <StudentProfile />
                       </AppLayout>
                     </RoleProtectedRoute>
                   </ProtectedRoute>
