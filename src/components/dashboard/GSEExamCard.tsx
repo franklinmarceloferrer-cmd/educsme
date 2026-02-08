@@ -16,7 +16,7 @@ export function GSEExamCard() {
         <div>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Calendar className="h-5 w-5 text-primary" />
-            GSE Exams 2026
+            GCSE Exams 2026
           </CardTitle>
           <CardDescription>Official Ofqual guidance</CardDescription>
         </div>

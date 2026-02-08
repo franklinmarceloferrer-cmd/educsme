@@ -21,7 +21,7 @@ export default function GSEResources() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-brand-red">
-          GSE Exam Guide 2026
+          GCSE Exam Guide 2026
         </h1>
         <p className="text-brand-blue">
           Official guidance from Ofqual for GCSE, AS and A level exams
