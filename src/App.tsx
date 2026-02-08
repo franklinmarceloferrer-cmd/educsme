@@ -20,6 +20,7 @@ import UserManagement from "./pages/UserManagement";
 import StudentProfile from "./pages/StudentProfile";
 import Login from "./pages/Login";
 import AcceptInvite from "./pages/AcceptInvite";
+import GSEResources from "./pages/GSEResources";
 import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
@@ -157,6 +158,16 @@ const App = () => (
                         <StudentProfile />
                       </AppLayout>
                     </RoleProtectedRoute>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/gse-resources"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <GSEResources />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
