@@ -63,7 +63,7 @@ const navigation = [
     studentOnly: true,
   },
   {
-    title: "GSE Exam Guide",
+    title: "GCSE Exam Guide",
     url: "/gse-resources",
     icon: GraduationCap,
     studentOnly: true,
