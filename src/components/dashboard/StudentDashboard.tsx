@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { GSEExamCard } from "./GSEExamCard";
 
 function UrgentAnnouncementsBanner({ announcements }: { announcements: Announcement[] }) {
   if (announcements.length === 0) return null;
@@ -155,6 +156,9 @@ export function StudentDashboard() {
 
       {/* Urgent Announcements Banner */}
       <UrgentAnnouncementsBanner announcements={urgentAnnouncements} />
+
+      {/* GSE Exam Card */}
+      <GSEExamCard />
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">

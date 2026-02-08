@@ -7,7 +7,8 @@ import {
   Settings,
   LogOut,
   User,
-  UserCog
+  UserCog,
+  GraduationCap
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -59,6 +60,12 @@ const navigation = [
     title: "My Profile",
     url: "/profile",
     icon: User,
+    studentOnly: true,
+  },
+  {
+    title: "GSE Exam Guide",
+    url: "/gse-resources",
+    icon: GraduationCap,
     studentOnly: true,
   },
   {
