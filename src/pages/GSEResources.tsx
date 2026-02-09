@@ -14,6 +14,7 @@ import {
   Calculator
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StudyGrid } from "@/components/gcse/StudyGrid";
 
 export default function GSEResources() {
   return (
@@ -27,6 +28,9 @@ export default function GSEResources() {
           Official guidance from Ofqual for GCSE, AS and A level exams
         </p>
       </div>
+
+      {/* Study Grid */}
+      <StudyGrid />
 
       {/* Important Dates Banner */}
       <Card className="border-primary/30 bg-primary/5">
