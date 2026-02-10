@@ -1,243 +1,153 @@
 
 
-## Plano: Pagina de Perfil do Estudante
+# Conteudos de Estudo GCSE - Sistema de Conteudo Proprio
 
-### Visao Geral
-Criar uma pagina de perfil que permite aos estudantes visualizar e editar suas informacoes pessoais. A pagina sera acessivel tanto para estudantes (com edicao limitada) quanto para staff (admin/teacher com edicao completa).
+## Objetivo
+Criar um sistema onde a equipe da escola (admin/teacher) pode criar e gerenciar conteudos de estudo para cada topico GCSE, e os estudantes podem acessar esses materiais diretamente no sistema.
+
+## Visao Geral da Solucao
+
+O sistema tera tres partes principais:
+1. **Banco de dados** para armazenar os conteudos de estudo
+2. **Interface de gestao** para admin/teacher criar e editar conteudos
+3. **Interface de leitura** para estudantes acessarem os materiais
 
 ---
 
-### Arquitetura da Pagina
+## 1. Banco de Dados
 
-```text
-+--------------------------------------------------+
-|  [Avatar]                                        |
-|   Nome do Estudante                              |
-|   ID: STU001 | Grade: 10th | Section: A          |
-+--------------------------------------------------+
-|                                                  |
-|  INFORMACOES PESSOAIS                            |
-|  +--------------------+  +--------------------+  |
-|  | Email              |  | Telefone           |  |
-|  | john@example.com   |  | +1 234 567 8900    |  |
-|  +--------------------+  +--------------------+  |
-|                                                  |
-|  +--------------------------------------------+  |
-|  | Endereco                                   |  |
-|  | 123 Main Street, City                      |  |
-|  +--------------------------------------------+  |
-|                                                  |
-|  INFORMACOES ACADEMICAS                          |
-|  +--------------------+  +--------------------+  |
-|  | Data de Matricula  |  | Status             |  |
-|  | 15/03/2024         |  | Ativo              |  |
-|  +--------------------+  +--------------------+  |
-|                                                  |
-|  [Editar Perfil]                                 |
-|                                                  |
-+--------------------------------------------------+
+### Nova tabela: `study_materials`
+
+| Coluna | Tipo | Descricao |
+|--------|------|-----------|
+| id | uuid (PK) | Identificador unico |
+| subject | text | Materia (Mathematics, English Language, etc.) |
+| topic | text | Topico (Number & Algebra, Creative Writing, etc.) |
+| title | text | Titulo do conteudo |
+| content | text | Conteudo em HTML (editor rich text) |
+| order_index | integer | Ordem de exibicao |
+| created_by | uuid | Referencia ao perfil do autor |
+| created_at | timestamptz | Data de criacao |
+| updated_at | timestamptz | Data de atualizacao |
+
+### Politicas RLS
+- **SELECT**: Todos os usuarios autenticados podem ler
+- **INSERT/UPDATE/DELETE**: Apenas admin e teacher
+
+---
+
+## 2. Interface de Gestao (Admin/Teacher)
+
+### Nova pagina: `/gcse-content-manage`
+- Acessivel via sidebar para roles admin e teacher
+- Lista todos os conteudos agrupados por materia e topico
+- Botao para adicionar novo conteudo
+- Dialog/modal com formulario:
+  - Selecionar materia (dropdown com as 6 materias)
+  - Selecionar topico (dropdown filtrado pela materia)
+  - Titulo do conteudo
+  - Editor rich text (TipTap, ja instalado no projeto) para o corpo do conteudo
+- Opcoes de editar e excluir conteudos existentes
+
+---
+
+## 3. Interface do Estudante
+
+### Atualizacao do StudyGrid
+- Cada topico na grade de estudos tera um indicador visual mostrando se ha conteudos disponiveis
+- Ao clicar em um topico, abre uma pagina/modal com a lista de materiais daquele topico
+- Cada material exibe o titulo e o conteudo formatado
+
+### Nova pagina: `/gcse-study/:subject/:topic`
+- Exibe todos os materiais de estudo do topico selecionado
+- Navegacao lateral entre topicos da mesma materia
+- Conteudo renderizado com sanitizacao HTML (DOMPurify, ja instalado)
+
+---
+
+## 4. Arquivos a Criar/Modificar
+
+### Novos arquivos:
+- `src/pages/GCSEContentManage.tsx` - Pagina de gestao de conteudos
+- `src/pages/GCSEStudyTopic.tsx` - Pagina de leitura do estudante
+- `src/components/gcse/StudyMaterialForm.tsx` - Formulario de criacao/edicao
+- `src/components/gcse/StudyMaterialList.tsx` - Lista de materiais por topico
+
+### Arquivos modificados:
+- `src/components/gcse/StudyGrid.tsx` - Adicionar links clicaveis nos topicos e indicador de conteudo
+- `src/components/layout/AppSidebar.tsx` - Adicionar link "Manage GCSE Content" para admin/teacher
+- `src/App.tsx` - Adicionar novas rotas
+- `src/lib/supabaseApi.ts` - Adicionar funcoes de API para study_materials
+
+---
+
+## Secao Tecnica
+
+### Migracao SQL
+```sql
+CREATE TABLE public.study_materials (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  subject text NOT NULL,
+  topic text NOT NULL,
+  title text NOT NULL,
+  content text NOT NULL DEFAULT '',
+  order_index integer NOT NULL DEFAULT 0,
+  created_by uuid REFERENCES public.profiles(user_id),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.study_materials ENABLE ROW LEVEL SECURITY;
+
+-- Todos autenticados podem ler
+CREATE POLICY "Authenticated users can read study materials"
+  ON public.study_materials FOR SELECT
+  TO authenticated USING (true);
+
+-- Admin e teacher podem inserir
+CREATE POLICY "Staff can insert study materials"
+  ON public.study_materials FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE user_id = auth.uid()
+      AND role IN ('admin', 'teacher')
+    )
+  );
+
+-- Admin e teacher podem atualizar
+CREATE POLICY "Staff can update study materials"
+  ON public.study_materials FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE user_id = auth.uid()
+      AND role IN ('admin', 'teacher')
+    )
+  );
+
+-- Admin e teacher podem deletar
+CREATE POLICY "Staff can delete study materials"
+  ON public.study_materials FOR DELETE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE user_id = auth.uid()
+      AND role IN ('admin', 'teacher')
+    )
+  );
+
+CREATE TRIGGER update_study_materials_updated_at
+  BEFORE UPDATE ON public.study_materials
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
----
-
-### 1. Nova Pagina: `src/pages/StudentProfile.tsx`
-
-**Funcionalidades:**
-
-1. **Visualizacao do Perfil**
-   - Avatar com opcao de upload (usando componente existente `StudentAvatarUpload`)
-   - Informacoes pessoais: nome, email, telefone, endereco
-   - Informacoes academicas: student_id, grade, section, enrollment_date, status
-   - Layout responsivo com cards organizados
-
-2. **Edicao do Perfil**
-   - Dialog/modal para edicao (similar ao `StudentFormDialog`)
-   - Estudantes podem editar: telefone, endereco
-   - Staff pode editar: todos os campos (nome, email, grade, section, status, etc.)
-
-3. **Busca do Registro do Estudante**
-   - Para estudantes: busca pelo email do perfil autenticado
-   - Para staff: pode acessar qualquer perfil via parametro de URL
-
----
-
-### 2. Atualizacoes na API
-
-**Arquivo:** `src/lib/supabaseApi.ts`
-
-Adicionar novo metodo no `studentsApi`:
-
-```typescript
-// Buscar estudante pelo email (para o proprio estudante)
-getByEmail: async (email: string): Promise<Student | null> => {
-  const { data, error } = await supabase
-    .from('students')
-    .select('*')
-    .eq('email', email)
-    .single();
-  
-  if (error) return null;
-  return data;
-}
-
-// Buscar estudante por ID
-getById: async (id: string): Promise<Student | null> => {
-  const { data, error } = await supabase
-    .from('students')
-    .select('*')
-    .eq('id', id)
-    .single();
-  
-  if (error) return null;
-  return data;
-}
-```
-
----
-
-### 3. Novo Componente: `StudentProfileEditDialog.tsx`
-
-**Arquivo:** `src/components/students/StudentProfileEditDialog.tsx`
-
-- Reutiliza a estrutura do `StudentFormDialog`
-- Adapta os campos editaveis baseado no role do usuario
-- Estudantes: apenas telefone e endereco
-- Staff: todos os campos
-
----
-
-### 4. Atualizacoes no Roteamento
-
-**Arquivo:** `src/App.tsx`
-
-```typescript
-// Adicionar novas rotas
-<Route path="/profile" element={
-  <ProtectedRoute>
-    <AppLayout>
-      <StudentProfile />
-    </AppLayout>
-  </ProtectedRoute>
-} />
-
-<Route path="/students/:id" element={
-  <ProtectedRoute>
-    <RoleProtectedRoute allowedRoles={['admin', 'teacher']}>
-      <AppLayout>
-        <StudentProfile />
-      </AppLayout>
-    </RoleProtectedRoute>
-  </ProtectedRoute>
-} />
-```
-
----
-
-### 5. Atualizacoes na Navegacao
-
-**Arquivo:** `src/components/layout/AppSidebar.tsx`
-
-Adicionar link "Meu Perfil" para estudantes:
-
-```typescript
-{
-  title: "My Profile",
-  url: "/profile",
-  icon: User,
-  studentOnly: true, // Apenas para estudantes
-}
-```
-
-**Arquivo:** `src/pages/Students.tsx`
-
-Adicionar link para ver perfil individual na tabela:
-
-```typescript
-// Na coluna de acoes, adicionar botao de "Ver Perfil"
-<Button onClick={() => navigate(`/students/${student.id}`)}>
-  <Eye className="h-4 w-4" />
-</Button>
-```
-
----
-
-### 6. Componentes da Pagina de Perfil
-
-**Secoes:**
-
-1. **Header do Perfil**
-   - Avatar grande com opcao de edicao
-   - Nome e informacoes basicas
-   - Badge de status
-
-2. **Card de Informacoes Pessoais**
-   - Email (somente leitura para estudantes)
-   - Telefone (editavel)
-   - Endereco (editavel)
-
-3. **Card de Informacoes Academicas**
-   - Student ID (somente leitura)
-   - Grade e Section
-   - Data de matricula
-   - Status (badge colorido)
-
-4. **Acoes**
-   - Botao "Editar Perfil" abre dialog de edicao
-   - Feedback visual ao salvar
-
----
-
-### Arquivos a Criar
-
-| Arquivo | Descricao |
-|---------|-----------|
-| `src/pages/StudentProfile.tsx` | Pagina principal do perfil |
-| `src/components/students/StudentProfileEditDialog.tsx` | Dialog de edicao do perfil |
-| `src/components/students/ProfileInfoCard.tsx` | Card reutilizavel para informacoes |
-
-### Arquivos a Modificar
-
-| Arquivo | Alteracao |
-|---------|-----------|
-| `src/App.tsx` | Adicionar rotas `/profile` e `/students/:id` |
-| `src/components/layout/AppSidebar.tsx` | Adicionar link "Meu Perfil" |
-| `src/lib/supabaseApi.ts` | Adicionar `getByEmail` e `getById` no studentsApi |
-| `src/pages/Students.tsx` | Adicionar link para perfil na tabela |
-
----
-
-### Fluxo de Uso
-
-**Para Estudantes:**
-1. Estudante faz login
-2. Clica em "Meu Perfil" no sidebar
-3. Ve suas informacoes
-4. Pode editar telefone e endereco
-5. Salva alteracoes
-
-**Para Staff:**
-1. Staff acessa pagina de estudantes
-2. Clica em "Ver Perfil" de um estudante
-3. Acessa `/students/:id`
-4. Ve todas as informacoes
-5. Pode editar qualquer campo
-
----
-
-### Consideracoes de Seguranca
-
-1. **RLS ja configurada** - Estudantes so podem ver seu proprio registro (via email match)
-2. **Edicao limitada** - Frontend restringe campos editaveis por role
-3. **Validacao de dados** - Zod schema para validar inputs
-4. **Permissoes de rota** - RoleProtectedRoute para rotas de staff
-
----
-
-### Design Visual
-
-- Usar componentes UI existentes (Card, Badge, Avatar, Dialog)
-- Seguir paleta de cores brand-red e brand-blue
-- Layout responsivo com grid
-- Estados de loading com skeletons
-- Feedback visual com toast ao salvar
+### Stack utilizada
+- **TipTap** (ja instalado) para editor rich text
+- **DOMPurify** (ja instalado) para sanitizacao do HTML
+- **React Query** para fetch e cache dos dados
+- **React Router** para navegacao entre topicos
 
