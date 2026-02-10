@@ -1,7 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BookOpen } from "lucide-react";
+import { BookOpen, FileText } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StudyTopic {
   topic: string;
@@ -98,6 +101,23 @@ const priorityLabel: Record<string, string> = {
 };
 
 export function StudyGrid() {
+  // Fetch content counts per subject+topic
+  const { data: materialCounts = {} } = useQuery({
+    queryKey: ["study-materials-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("study_materials")
+        .select("subject, topic");
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      (data || []).forEach((m) => {
+        const key = `${m.subject}||${m.topic}`;
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      return counts;
+    },
+  });
+
   return (
     <div className="space-y-6">
       <Card>
@@ -112,7 +132,7 @@ export function StudyGrid() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Distribua seus estudos ao longo da semana. Priorize os tópicos marcados como <Badge variant="outline" className={`text-xs ${priorityVariant.high}`}>Alta</Badge> e revise regularmente.
+            Distribua seus estudos ao longo da semana. Priorize os tópicos marcados como <Badge variant="outline" className={`text-xs ${priorityVariant.high}`}>Alta</Badge> e revise regularmente. Clique nos tópicos com <FileText className="inline h-3.5 w-3.5 text-primary" /> para acessar os materiais de estudo.
           </p>
         </CardContent>
       </Card>
@@ -146,17 +166,35 @@ export function StudyGrid() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {subject.topics.map((topic) => (
-                      <TableRow key={topic.topic}>
-                        <TableCell className="text-xs py-2">{topic.topic}</TableCell>
-                        <TableCell className="text-xs py-2 text-center">{topic.hours}</TableCell>
-                        <TableCell className="text-xs py-2 text-center">
-                          <Badge variant="outline" className={`text-[10px] ${priorityVariant[topic.priority]}`}>
-                            {priorityLabel[topic.priority]}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {subject.topics.map((topic) => {
+                      const count = materialCounts[`${subject.name}||${topic.topic}`] || 0;
+                      const hasContent = count > 0;
+
+                      return (
+                        <TableRow key={topic.topic}>
+                          <TableCell className="text-xs py-2">
+                            {hasContent ? (
+                              <Link
+                                to={`/gcse-study/${encodeURIComponent(subject.name)}/${encodeURIComponent(topic.topic)}`}
+                                className="flex items-center gap-1.5 text-primary hover:underline font-medium"
+                              >
+                                <FileText className="h-3.5 w-3.5 shrink-0" />
+                                {topic.topic}
+                                <Badge variant="secondary" className="text-[10px] h-4 px-1">{count}</Badge>
+                              </Link>
+                            ) : (
+                              topic.topic
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs py-2 text-center">{topic.hours}</TableCell>
+                          <TableCell className="text-xs py-2 text-center">
+                            <Badge variant="outline" className={`text-[10px] ${priorityVariant[topic.priority]}`}>
+                              {priorityLabel[topic.priority]}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>
