@@ -221,6 +221,50 @@ export type Database = {
         }
         Relationships: []
       }
+      study_materials: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          order_index: number
+          subject: string
+          title: string
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          order_index?: number
+          subject: string
+          title: string
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          order_index?: number
+          subject?: string
+          title?: string
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_materials_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

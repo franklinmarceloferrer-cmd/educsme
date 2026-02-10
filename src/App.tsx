@@ -21,6 +21,8 @@ import StudentProfile from "./pages/StudentProfile";
 import Login from "./pages/Login";
 import AcceptInvite from "./pages/AcceptInvite";
 import GSEResources from "./pages/GSEResources";
+import GCSEContentManage from "./pages/GCSEContentManage";
+import GCSEStudyTopic from "./pages/GCSEStudyTopic";
 import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
@@ -167,6 +169,28 @@ const App = () => (
                   <ProtectedRoute>
                     <AppLayout>
                       <GSEResources />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/gcse-content-manage"
+                element={
+                  <ProtectedRoute>
+                    <RoleProtectedRoute allowedRoles={['admin', 'teacher']}>
+                      <AppLayout>
+                        <GCSEContentManage />
+                      </AppLayout>
+                    </RoleProtectedRoute>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/gcse-study/:subject/:topic"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <GCSEStudyTopic />
                     </AppLayout>
                   </ProtectedRoute>
                 }

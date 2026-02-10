@@ -8,7 +8,8 @@ import {
   LogOut,
   User,
   UserCog,
-  GraduationCap
+  GraduationCap,
+  BookOpen
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -90,6 +91,12 @@ const navigation = [
     url: "/admin/users",
     icon: UserCog,
     adminExclusive: true,
+  },
+  {
+    title: "Manage GCSE Content",
+    url: "/gcse-content-manage",
+    icon: BookOpen,
+    adminOnly: true,
   },
 ];
 
