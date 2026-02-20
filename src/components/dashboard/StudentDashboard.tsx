@@ -9,6 +9,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { GSEExamCard } from "./GSEExamCard";
+import { fileStorage } from "@/lib/fileStorage";
+import { toast } from "sonner";
+
+// Strip bucket prefix from stored path (e.g. "documents/file.pdf" → "file.pdf")
+function getStoragePath(fileUrl: string): string {
+  if (fileUrl.startsWith('documents/')) return fileUrl.slice('documents/'.length);
+  return fileUrl;
+}
 
 function UrgentAnnouncementsBanner({ announcements }: { announcements: Announcement[] }) {
   if (announcements.length === 0) return null;
@@ -96,6 +104,20 @@ function DocumentQuickAccessCard({ document }: { document: Document }) {
     return `${(kb / 1024).toFixed(1)} MB`;
   };
 
+  const handleDownload = async () => {
+    if (document.file_url.startsWith('http')) {
+      window.open(document.file_url, '_blank');
+      return;
+    }
+    const storagePath = getStoragePath(document.file_url);
+    const signedUrl = await fileStorage.getSignedUrl('documents', storagePath);
+    if (signedUrl) {
+      window.open(signedUrl, '_blank');
+    } else {
+      toast.error('Não foi possível gerar o link de download');
+    }
+  };
+
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors group">
       <span className="text-2xl">{getFileIcon(document.file_type)}</span>
@@ -105,10 +127,13 @@ function DocumentQuickAccessCard({ document }: { document: Document }) {
           {formatFileSize(document.file_size)} • {format(new Date(document.created_at), "d MMM", { locale: ptBR })}
         </p>
       </div>
-      <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity" asChild>
-        <a href={document.file_url} target="_blank" rel="noopener noreferrer">
-          <Download className="h-4 w-4" />
-        </a>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={handleDownload}
+      >
+        <Download className="h-4 w-4" />
       </Button>
     </div>
   );

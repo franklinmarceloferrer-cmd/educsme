@@ -22,22 +22,18 @@ export default function Documents() {
     queryFn: documentsApi.getAll,
   });
 
+  // Strip bucket name prefix from stored path so storage calls don't duplicate it
+  const getStoragePath = (fileUrl: string) => {
+    if (fileUrl.startsWith('documents/')) return fileUrl.slice('documents/'.length);
+    return fileUrl;
+  };
+
   const deleteMutation = useMutation({
     mutationFn: async (documentId: string) => {
-      // First get the document to find the file path
       const document = documents?.find(d => d.id === documentId);
-      if (document) {
-        // Extract file path from URL for deletion from storage
-        const urlParts = document.file_url.split('/');
-        const fileName = urlParts[urlParts.length - 1];
-
-        // Delete from storage (if it's a storage URL)
-        if (document.file_url.includes('supabase')) {
-          await fileStorage.deleteFile('documents', fileName);
-        }
+      if (document && !document.file_url.startsWith('http')) {
+        await fileStorage.deleteFile('documents', getStoragePath(document.file_url));
       }
-
-      // Delete from database
       await documentsApi.delete(documentId);
     },
     onSuccess: () => {
@@ -49,37 +45,12 @@ export default function Documents() {
     },
   });
 
-  const filteredDocuments = documents?.filter(doc =>
-    doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.uploaded_by.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  ) || [];
-
-  const getFileIcon = (type: string) => {
-    if (type.includes('image')) return <Image className="h-4 w-4" />;
-    if (type.includes('pdf')) return <FileText className="h-4 w-4" />;
-    return <Archive className="h-4 w-4" />;
-  };
-
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      general: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
-      academic: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-      administrative: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-      policy: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-    };
-    return colors[category as keyof typeof colors] || colors.general;
-  };
-
   const handleDownload = async (document: DocumentType) => {
     try {
       if (document.file_url.startsWith('http')) {
-        // External URL - open in new tab
         window.open(document.file_url, '_blank');
       } else {
-        // Supabase storage file - get signed URL
-        const signedUrl = await fileStorage.getSignedUrl('documents', document.file_url);
+        const signedUrl = await fileStorage.getSignedUrl('documents', getStoragePath(document.file_url));
         if (signedUrl) {
           window.open(signedUrl, '_blank');
         } else {
@@ -103,6 +74,29 @@ export default function Documents() {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const filteredDocuments = documents?.filter(doc =>
+    doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doc.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doc.uploaded_by.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  ) || [];
+
+  const getFileIcon = (type: string) => {
+    if (type.includes('image')) return <Image className="h-4 w-4" />;
+    if (type.includes('pdf')) return <FileText className="h-4 w-4" />;
+    return <Archive className="h-4 w-4" />;
+  };
+
+  const getCategoryColor = (category: string) => {
+    const colors = {
+      general: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+      academic: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      administrative: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      policy: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+    };
+    return colors[category as keyof typeof colors] || colors.general;
   };
 
   const canUpload = hasRole('admin') || hasRole('teacher');

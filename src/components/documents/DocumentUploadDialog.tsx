@@ -106,7 +106,7 @@ export function DocumentUploadDialog({ open, onOpenChange }: DocumentUploadDialo
           const document = await documentsApi.create({
             name: values.name || fileItem.file.name,
             description: values.description,
-            file_url: uploadResult.data.publicUrl || uploadResult.data.fullPath,
+            file_url: uploadResult.data.path,
             file_size: fileItem.file.size,
             file_type: fileItem.file.type,
             category: values.category,
