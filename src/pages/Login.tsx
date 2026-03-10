@@ -181,6 +181,65 @@ export default function Login() {
               </TabsContent>
             </Tabs>
 
+            {showForgotPassword && (
+              <div className="mt-4 p-4 rounded-lg border bg-muted/30 space-y-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setShowForgotPassword(false); setForgotSuccess(false); setError(''); }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </button>
+                  <p className="text-sm font-medium">Reset your password</p>
+                </div>
+                {forgotSuccess ? (
+                  <p className="text-sm text-green-600">
+                    Recovery email sent! Check your inbox for a link to reset your password.
+                  </p>
+                ) : (
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      setLoading(true);
+                      setError('');
+                      try {
+                        const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+                          redirectTo: `${window.location.origin}/reset-password`,
+                        });
+                        if (error) {
+                          setError(error.message);
+                        } else {
+                          setForgotSuccess(true);
+                        }
+                      } catch {
+                        setError('An unexpected error occurred');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    className="space-y-3"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="forgot-email">Email</Label>
+                      <Input
+                        id="forgot-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" variant="brand-red" className="w-full" disabled={loading}>
+                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Send Reset Link
+                    </Button>
+                  </form>
+                )}
+              </div>
+            )}
+
             {error && (
               <Alert className="mt-4">
                 <AlertDescription>{error}</AlertDescription>
