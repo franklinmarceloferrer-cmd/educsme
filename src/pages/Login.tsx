@@ -16,6 +16,9 @@ export default function Login() {
   // Role is always 'student' for security - admins must be elevated by existing admins
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
