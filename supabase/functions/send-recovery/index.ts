@@ -12,6 +12,7 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
+  // Use admin API to generate recovery link (bypasses rate limits)
   const { data, error } = await supabase.auth.admin.generateLink({
     type: "recovery",
     email,
@@ -19,25 +20,18 @@ Deno.serve(async (req) => {
   });
 
   if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 400 });
+    return new Response(JSON.stringify({ error: error.message }), { 
+      status: 400, 
+      headers: { "Content-Type": "application/json" } 
+    });
   }
 
-  // The generateLink call with admin doesn't send the email automatically.
-  // Let's use resetPasswordForEmail instead via the public client.
-  const publicClient = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!
-  );
-
-  const { error: resetError } = await publicClient.auth.resetPasswordForEmail(email, {
-    redirectTo: "https://educsme.lovable.app/reset-password",
-  });
-
-  if (resetError) {
-    return new Response(JSON.stringify({ error: resetError.message }), { status: 400 });
-  }
-
-  return new Response(JSON.stringify({ success: true, message: `Recovery email sent to ${email}` }), {
+  // Return the recovery link for the admin to share directly
+  return new Response(JSON.stringify({ 
+    success: true, 
+    message: `Recovery link generated for ${email}`,
+    action_link: data?.properties?.action_link || null,
+  }), {
     headers: { "Content-Type": "application/json" },
   });
 });
