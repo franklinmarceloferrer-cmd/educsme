@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from '@/contexts/AuthContext';
-import { GraduationCap, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { GraduationCap, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -16,6 +17,9 @@ export default function Login() {
   // Role is always 'student' for security - admins must be elevated by existing admins
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
@@ -115,6 +119,18 @@ export default function Login() {
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign In
                   </Button>
+                  <button
+                    type="button"
+                    className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors mt-2"
+                    onClick={() => {
+                      setShowForgotPassword(true);
+                      setError('');
+                      setForgotSuccess(false);
+                      setForgotEmail(email);
+                    }}
+                  >
+                    Forgot your password?
+                  </button>
                 </form>
               </TabsContent>
 
@@ -164,6 +180,65 @@ export default function Login() {
                 </form>
               </TabsContent>
             </Tabs>
+
+            {showForgotPassword && (
+              <div className="mt-4 p-4 rounded-lg border bg-muted/30 space-y-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setShowForgotPassword(false); setForgotSuccess(false); setError(''); }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </button>
+                  <p className="text-sm font-medium">Reset your password</p>
+                </div>
+                {forgotSuccess ? (
+                  <p className="text-sm text-green-600">
+                    Recovery email sent! Check your inbox for a link to reset your password.
+                  </p>
+                ) : (
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      setLoading(true);
+                      setError('');
+                      try {
+                        const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+                          redirectTo: `${window.location.origin}/reset-password`,
+                        });
+                        if (error) {
+                          setError(error.message);
+                        } else {
+                          setForgotSuccess(true);
+                        }
+                      } catch {
+                        setError('An unexpected error occurred');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    className="space-y-3"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="forgot-email">Email</Label>
+                      <Input
+                        id="forgot-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" variant="brand-red" className="w-full" disabled={loading}>
+                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Send Reset Link
+                    </Button>
+                  </form>
+                )}
+              </div>
+            )}
 
             {error && (
               <Alert className="mt-4">
