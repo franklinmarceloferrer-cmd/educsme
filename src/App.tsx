@@ -19,6 +19,7 @@ import Reports from "./pages/Reports";
 import UserManagement from "./pages/UserManagement";
 import StudentProfile from "./pages/StudentProfile";
 import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
 import AcceptInvite from "./pages/AcceptInvite";
 import GSEResources from "./pages/GSEResources";
 import GCSEContentManage from "./pages/GCSEContentManage";
