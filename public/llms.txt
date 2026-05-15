@@ -1,0 +1,17 @@
+# EduCMS
+
+> Plataforma de gestão educacional para escolas: anúncios, documentos, estudantes, relatórios e recursos de estudo GCSE em um único sistema.
+
+EduCMS oferece autenticação multi-perfil (admin, professor, estudante), comunicação centralizada, gestão de documentos com armazenamento seguro e materiais de estudo GCSE criados pela equipe da escola.
+
+## Pages
+
+- [Home](/): Visão geral da plataforma, recursos e benefícios.
+- [Login](/login): Acesso à conta e recuperação de senha.
+
+## Optional
+
+- [Dashboard](/dashboard): Painel principal (requer login).
+- [Anúncios](/announcements): Comunicados da escola (requer login).
+- [Documentos](/documents): Biblioteca de documentos (requer login).
+- [Recursos GCSE](/gse-resources): Guia oficial de exames GCSE 2026 (requer login).
