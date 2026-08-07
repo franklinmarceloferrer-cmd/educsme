@@ -25,6 +25,7 @@ import GSEResources from "./pages/GSEResources";
 import GCSEContentManage from "./pages/GCSEContentManage";
 import GCSEStudyTopic from "./pages/GCSEStudyTopic";
 import NotFound from "./pages/NotFound";
+import OAuthConsent from "./pages/OAuthConsent";
 const queryClient = new QueryClient();
 
 // Protected Route component
