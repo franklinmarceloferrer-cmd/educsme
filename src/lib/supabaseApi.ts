@@ -84,6 +84,16 @@ export interface StudentInvite {
   updated_at: string;
 }
 
+/** Non-sensitive invite fields safely exposed to unauthenticated invite recipients. */
+export interface PublicInvite {
+  email: string;
+  name: string;
+  grade: string;
+  section: string;
+  expires_at: string;
+}
+
+
 export interface Profile {
   id: string;
   user_id: string;
@@ -651,23 +661,21 @@ export const invitesApi = {
     }
   },
 
-  getByToken: async (token: string): Promise<StudentInvite | null> => {
+  /**
+   * Validates an invite token via a secure server function.
+   * Invite rows are not readable by anonymous clients, so the lookup runs server-side
+   * and returns only the non-sensitive fields needed to render the accept-invite form.
+   */
+  getByToken: async (token: string): Promise<PublicInvite | null> => {
     try {
-      const { data, error } = await supabase
-        .from('student_invites')
-        .select('*')
-        .eq('token', token)
-        .eq('status', 'pending')
-        .gt('expires_at', new Date().toISOString())
-        .single();
+      const { data, error } = await supabase.functions.invoke('validate-student-invite', {
+        body: { token },
+      });
 
-      if (error) {
-        if (error.code === 'PGRST116') return null; // No rows found
-        throw error;
-      }
-      return data as StudentInvite;
+      if (error) throw error;
+      return (data?.invite as PublicInvite | null) ?? null;
     } catch (error) {
-      console.error('Error fetching invite by token:', error);
+      console.error('Error validating invite token');
       return null;
     }
   },
