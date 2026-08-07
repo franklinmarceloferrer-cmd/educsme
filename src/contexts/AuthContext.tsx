@@ -16,7 +16,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string, redirectTo?: string) => Promise<{ error?: Error }>;
-  signUp: (email: string, password: string, displayName: string) => Promise<{ error?: Error }>;
+  signUp: (email: string, password: string, displayName: string, redirectTo?: string) => Promise<{ error?: Error }>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
   loading: boolean;
@@ -158,12 +158,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Security: Role is always defaulted to 'student' server-side
   // Only admins can elevate user roles via database function
-  const signUp = async (email: string, password: string, displayName: string) => {
+  const signUp = async (email: string, password: string, displayName: string, redirectTo?: string) => {
     try {
       // Clean up existing state
       cleanupAuthState();
       
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}${redirectTo ?? '/'}`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
