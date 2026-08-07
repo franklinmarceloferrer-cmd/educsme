@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,12 +22,17 @@ export default function Login() {
   const [forgotSuccess, setForgotSuccess] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Only same-origin relative paths are accepted as a post-login destination.
+  const rawNext = searchParams.get('next');
+  const nextPath = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null;
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate(nextPath ?? '/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, navigate, nextPath]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +40,7 @@ export default function Login() {
     setError('');
 
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(email, password, nextPath ?? undefined);
       if (error) {
         setError(error.message);
       }
@@ -52,7 +57,7 @@ export default function Login() {
     setError('');
 
     try {
-      const { error } = await signUp(email, password, displayName);
+      const { error } = await signUp(email, password, displayName, nextPath ?? undefined);
       if (error) {
         setError(error.message);
       } else {
