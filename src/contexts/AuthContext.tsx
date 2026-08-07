@@ -15,7 +15,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signIn: (email: string, password: string) => Promise<{ error?: Error }>;
+  signIn: (email: string, password: string, redirectTo?: string) => Promise<{ error?: Error }>;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error?: Error }>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
@@ -122,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, redirectTo?: string) => {
     try {
       // Clean up existing state
       cleanupAuthState();
@@ -147,7 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (data.user) {
         // Force page reload for clean state
-        window.location.href = '/';
+        window.location.href = redirectTo ?? '/';
       }
       
       return { error: null };
