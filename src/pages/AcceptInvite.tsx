@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { invitesApi, type StudentInvite } from "@/lib/supabaseApi";
+import { invitesApi, type PublicInvite } from "@/lib/supabaseApi";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -26,7 +26,7 @@ export default function AcceptInvite() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   
-  const [invite, setInvite] = useState<StudentInvite | null>(null);
+  const [invite, setInvite] = useState<PublicInvite | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
