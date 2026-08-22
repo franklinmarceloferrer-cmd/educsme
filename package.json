@@ -13,9 +13,11 @@
     "type-check": "tsc --noEmit",
     "test": "echo 'Tests not implemented yet'",
     "test:ci": "echo 'CI tests not implemented yet'",
-    "deploy:build": "npm run type-check && npm run lint && npm run build",
+    "deploy:build": "npm run type-check && npm run lint && npm run security:check && npm run build",
     "deploy:preview": "npm run deploy:build && npm run preview",
+    "security:check": "node scripts/check-security-definer.mjs",
     "check-storage": "node scripts/check-storage.js",
+
     "setup": "npm install && npm run check-storage"
   },
   "dependencies": {

@@ -95,7 +95,16 @@ stages:
       displayName: '🔍 Run Linting'
       continueOnError: false
     
+    # Fail the build if SECURITY DEFINER functions become client-executable
+    - script: |
+        npm run security:check
+      displayName: '🔐 Security Scan (SECURITY DEFINER exposure)'
+      continueOnError: false
+      env:
+        SUPABASE_DB_URL: $(SUPABASE_DB_URL)
+    
     # Run tests (currently placeholder)
+
     - script: |
         npm run test:ci || echo "⚠️ Tests not configured yet"
         echo "✅ Tests completed"
