@@ -160,11 +160,12 @@ export const dashboardApi = {
         supabase.from('documents').select('id', { count: 'exact' })
       ]);
 
-      // Count teachers using secure function
-      const { data: teacherCountData } = await supabase.rpc('get_role_count', { 
-        role_name: 'teacher' 
-      });
-      const teacherCount = teacherCountData || 0;
+      // Count teachers via profiles (restricted to staff by row-level security)
+      const { count: teacherCount } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'teacher');
+
 
       return {
         totalStudents: studentsResult.count || 0,
