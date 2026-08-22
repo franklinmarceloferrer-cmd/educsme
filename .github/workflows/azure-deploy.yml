@@ -48,10 +48,18 @@ jobs:
         npm run lint
         echo "✅ Linting completed successfully"
 
+    - name: 🔐 Security Scan (SECURITY DEFINER exposure)
+      env:
+        SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      run: |
+        npm run security:check
+
     - name: 🧪 Run Tests
       run: |
         npm run test:ci || echo "⚠️ Tests not configured yet"
         echo "✅ Tests completed"
+
+
 
     - name: 🏗️ Build Application
       env:
