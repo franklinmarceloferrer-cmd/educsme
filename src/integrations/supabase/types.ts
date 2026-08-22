@@ -270,12 +270,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_role_count: { Args: { role_name: string }; Returns: number }
-      is_admin: { Args: never; Returns: boolean }
-      update_user_role: {
-        Args: { new_role: string; target_user_id: string }
-        Returns: undefined
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
