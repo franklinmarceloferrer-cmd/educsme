@@ -124,10 +124,15 @@ export const usersApi = {
 
   updateRole: async (userId: string, newRole: string): Promise<void> => {
     try {
-      const { error } = await supabase.rpc('update_user_role', {
-        target_user_id: userId,
-        new_role: newRole,
-      });
+      if (!['admin', 'teacher', 'student'].includes(newRole)) {
+        throw new Error('Invalid role');
+      }
+
+      // Role updates are enforced server-side by row-level security (admins only)
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('user_id', userId);
 
       if (error) throw error;
     } catch (error) {
@@ -135,6 +140,7 @@ export const usersApi = {
       throw error;
     }
   },
+
 };
 
 // Student Dashboard Data
@@ -154,11 +160,12 @@ export const dashboardApi = {
         supabase.from('documents').select('id', { count: 'exact' })
       ]);
 
-      // Count teachers using secure function
-      const { data: teacherCountData } = await supabase.rpc('get_role_count', { 
-        role_name: 'teacher' 
-      });
-      const teacherCount = teacherCountData || 0;
+      // Count teachers via profiles (restricted to staff by row-level security)
+      const { count: teacherCount } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'teacher');
+
 
       return {
         totalStudents: studentsResult.count || 0,
