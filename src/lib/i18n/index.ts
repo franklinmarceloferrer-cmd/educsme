@@ -58,7 +58,7 @@ export function translate(
   }
 
   return Object.entries(variables).reduce(
-    (text, [name, value]) => text.replaceAll(`{{${name}}}`, String(value)),
+    (text, [name, value]) => text.split(`{{${name}}}`).join(String(value)),
     template,
   );
 }
