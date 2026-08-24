@@ -206,6 +206,7 @@ const App = () => (
           </TooltipProvider>
         </ThemeProvider>
       </AuthProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   </ErrorBoundary>
 );
