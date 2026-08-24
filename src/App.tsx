@@ -67,6 +67,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
       <AuthProvider>
         <ThemeProvider defaultTheme="light" storageKey="edu-cms-theme">
           <TooltipProvider>
