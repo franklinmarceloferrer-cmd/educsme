@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
@@ -67,6 +68,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
       <AuthProvider>
         <ThemeProvider defaultTheme="light" storageKey="edu-cms-theme">
           <TooltipProvider>
@@ -205,6 +207,7 @@ const App = () => (
           </TooltipProvider>
         </ThemeProvider>
       </AuthProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   </ErrorBoundary>
 );
