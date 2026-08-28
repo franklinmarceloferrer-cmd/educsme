@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { GraduationCap, Loader2, CheckCircle } from 'lucide-react';
 
 export default function ResetPassword() {
@@ -16,6 +17,7 @@ export default function ResetPassword() {
   const [success, setSuccess] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -38,12 +40,12 @@ export default function ResetPassword() {
     setError('');
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+      setError(t('auth.newPassword.tooShort'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(t('auth.newPassword.mismatch'));
       return;
     }
 
@@ -58,7 +60,7 @@ export default function ResetPassword() {
         setTimeout(() => navigate('/login'), 3000);
       }
     } catch {
-      setError('An unexpected error occurred.');
+      setError(t('auth.unexpectedError'));
     } finally {
       setLoading(false);
     }
@@ -76,9 +78,9 @@ export default function ResetPassword() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Reset Password</CardTitle>
+            <CardTitle>{t('auth.newPassword.title')}</CardTitle>
             <CardDescription>
-              Enter your new password below
+              {t('auth.newPassword.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -86,26 +88,26 @@ export default function ResetPassword() {
               <div className="text-center space-y-4">
                 <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
                 <p className="text-sm text-muted-foreground">
-                  Password updated successfully! Redirecting to login...
+                  {t('auth.newPassword.success')}
                 </p>
               </div>
             ) : !isRecovery ? (
               <div className="text-center space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Invalid or expired recovery link. Please request a new password reset.
+                  {t('auth.newPassword.invalidLink')}
                 </p>
                 <Button variant="brand-red" onClick={() => navigate('/login')}>
-                  Back to Login
+                  {t('auth.newPassword.backToLogin')}
                 </Button>
               </div>
             ) : (
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
+                  <Label htmlFor="new-password">{t('auth.newPassword.label')}</Label>
                   <Input
                     id="new-password"
                     type="password"
-                    placeholder="Enter new password"
+                    placeholder={t('auth.newPassword.placeholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -113,11 +115,11 @@ export default function ResetPassword() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <Label htmlFor="confirm-password">{t('auth.newPassword.confirmLabel')}</Label>
                   <Input
                     id="confirm-password"
                     type="password"
-                    placeholder="Confirm new password"
+                    placeholder={t('auth.newPassword.confirmPlaceholder')}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
@@ -126,7 +128,7 @@ export default function ResetPassword() {
                 </div>
                 <Button type="submit" variant="brand-red" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Update Password
+                  {t('auth.newPassword.submit')}
                 </Button>
               </form>
             )}

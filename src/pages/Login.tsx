@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { GraduationCap, Loader2, ArrowLeft } from 'lucide-react';
 
@@ -21,6 +23,7 @@ export default function Login() {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState(false);
   const { signIn, signUp, user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -45,7 +48,7 @@ export default function Login() {
         setError(error.message);
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError(t('auth.unexpectedError'));
     } finally {
       setLoading(false);
     }
@@ -63,10 +66,10 @@ export default function Login() {
       } else {
         setError('');
         // Show success message
-        setError('Account created successfully! Please check your email to verify your account.');
+        setError(t('auth.signUpSuccess'));
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError(t('auth.unexpectedError'));
     } finally {
       setLoading(false);
     }
@@ -74,6 +77,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-red-light via-background to-brand-blue-light p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center space-x-2">
@@ -84,37 +90,37 @@ export default function Login() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Welcome</CardTitle>
+            <CardTitle>{t('auth.welcome')}</CardTitle>
             <CardDescription>
-              Sign in to your account or create a new one
+              {t('auth.welcomeDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="signin">{t('auth.tab.signIn')}</TabsTrigger>
+                <TabsTrigger value="signup">{t('auth.tab.signUp')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t('auth.email')}</Label>
                     <Input
                       id="email"
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder={t('auth.emailPlaceholder')}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{t('auth.password')}</Label>
                     <Input
                       id="password"
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder={t('auth.passwordPlaceholder')}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -122,7 +128,7 @@ export default function Login() {
                   </div>
                   <Button type="submit" variant="brand-red" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Sign In
+                    {t('auth.signIn')}
                   </Button>
                   <button
                     type="button"
@@ -134,7 +140,7 @@ export default function Login() {
                       setForgotEmail(email);
                     }}
                   >
-                    Forgot your password?
+                    {t('auth.forgotPassword')}
                   </button>
                 </form>
               </TabsContent>
@@ -142,33 +148,33 @@ export default function Login() {
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Display Name</Label>
+                    <Label htmlFor="signup-name">{t('auth.displayName')}</Label>
                     <Input
                       id="signup-name"
                       type="text"
-                      placeholder="Enter your full name"
+                      placeholder={t('auth.displayNamePlaceholder')}
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">{t('auth.email')}</Label>
                     <Input
                       id="signup-email"
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder={t('auth.emailPlaceholder')}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">{t('auth.password')}</Label>
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder="Create a password"
+                      placeholder={t('auth.createPasswordPlaceholder')}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -176,11 +182,11 @@ export default function Login() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    New accounts are created as students. Contact an administrator for role changes.
+                    {t('auth.signUpNotice')}
                   </p>
                   <Button type="submit" variant="brand-blue" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Sign Up
+                    {t('auth.signUp')}
                   </Button>
                 </form>
               </TabsContent>
@@ -196,11 +202,11 @@ export default function Login() {
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </button>
-                  <p className="text-sm font-medium">Reset your password</p>
+                  <p className="text-sm font-medium">{t('auth.reset.title')}</p>
                 </div>
                 {forgotSuccess ? (
                   <p className="text-sm text-green-600">
-                    Recovery email sent! Check your inbox for a link to reset your password.
+                    {t('auth.reset.sent')}
                   </p>
                 ) : (
                   <form
@@ -218,7 +224,7 @@ export default function Login() {
                           setForgotSuccess(true);
                         }
                       } catch {
-                        setError('An unexpected error occurred');
+                        setError(t('auth.unexpectedError'));
                       } finally {
                         setLoading(false);
                       }
@@ -226,11 +232,11 @@ export default function Login() {
                     className="space-y-3"
                   >
                     <div className="space-y-2">
-                      <Label htmlFor="forgot-email">Email</Label>
+                      <Label htmlFor="forgot-email">{t('auth.email')}</Label>
                       <Input
                         id="forgot-email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder={t('auth.emailPlaceholder')}
                         value={forgotEmail}
                         onChange={(e) => setForgotEmail(e.target.value)}
                         required
@@ -238,7 +244,7 @@ export default function Login() {
                     </div>
                     <Button type="submit" variant="brand-red" className="w-full" disabled={loading}>
                       {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Send Reset Link
+                      {t('auth.reset.send')}
                     </Button>
                   </form>
                 )}
@@ -253,9 +259,9 @@ export default function Login() {
 
             {import.meta.env.DEV && (
               <div className="mt-6 p-3 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
-                <p className="font-medium text-foreground">📚 Portfolio Demo</p>
-                <p className="mt-1">This system includes seed data for demonstration purposes.</p>
-                <p className="text-xs mt-2">New accounts start as students. Admins can elevate roles via the admin panel.</p>
+                <p className="font-medium text-foreground">{t('auth.demo.title')}</p>
+                <p className="mt-1">{t('auth.demo.line1')}</p>
+                <p className="text-xs mt-2">{t('auth.demo.line2')}</p>
               </div>
             )}
           </CardContent>
