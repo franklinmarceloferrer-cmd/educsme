@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,23 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { invitesApi, type PublicInvite } from "@/lib/supabaseApi";
-import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 
-const acceptInviteSchema = z.object({
-  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-  confirmPassword: z.string().min(6, "Confirme sua senha"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "As senhas não coincidem",
-  path: ["confirmPassword"],
-});
-
-type AcceptInviteFormData = z.infer<typeof acceptInviteSchema>;
+type AcceptInviteFormData = {
+  password: string;
+  confirmPassword: string;
+};
 
 export default function AcceptInvite() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  
+  const { t } = useLanguage();
+
   const [invite, setInvite] = useState<PublicInvite | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -33,6 +29,20 @@ export default function AcceptInvite() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const acceptInviteSchema = useMemo(
+    () =>
+      z
+        .object({
+          password: z.string().min(6, t("auth.invite.passwordTooShort")),
+          confirmPassword: z.string().min(6, t("auth.invite.confirmRequired")),
+        })
+        .refine((data) => data.password === data.confirmPassword, {
+          message: t("auth.invite.mismatch"),
+          path: ["confirmPassword"],
+        }),
+    [t],
+  );
 
   const form = useForm<AcceptInviteFormData>({
     resolver: zodResolver(acceptInviteSchema),
@@ -45,7 +55,7 @@ export default function AcceptInvite() {
   useEffect(() => {
     const validateToken = async () => {
       if (!token) {
-        setError("Token de convite não fornecido");
+        setError(t("auth.invite.noToken"));
         setLoading(false);
         return;
       }
@@ -53,20 +63,20 @@ export default function AcceptInvite() {
       try {
         const inviteData = await invitesApi.getByToken(token);
         if (!inviteData) {
-          setError("Convite inválido, expirado ou já utilizado");
+          setError(t("auth.invite.invalid"));
         } else {
           setInvite(inviteData);
         }
       } catch (err) {
         console.error("Error validating invite:", err);
-        setError("Erro ao validar convite");
+        setError(t("auth.invite.validateError"));
       } finally {
         setLoading(false);
       }
     };
 
     validateToken();
-  }, [token]);
+  }, [token, t]);
 
   const onSubmit = async (data: AcceptInviteFormData) => {
     if (!token) return;
@@ -91,19 +101,19 @@ export default function AcceptInvite() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Erro ao criar conta");
+        throw new Error(result.error || t("auth.invite.createError"));
       }
 
       setSuccess(true);
-      toast.success("Conta criada com sucesso!");
-      
+      toast.success(t("auth.invite.accountCreatedToast"));
+
       // Redirect to login after 3 seconds
       setTimeout(() => {
         navigate("/login");
       }, 3000);
     } catch (err) {
       console.error("Error accepting invite:", err);
-      toast.error(err instanceof Error ? err.message : "Erro ao criar conta");
+      toast.error(err instanceof Error ? err.message : t("auth.invite.createError"));
     } finally {
       setSubmitting(false);
     }
@@ -115,7 +125,7 @@ export default function AcceptInvite() {
         <Card className="w-full max-w-md mx-4">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-brand-red mb-4" />
-            <p className="text-muted-foreground">Validando convite...</p>
+            <p className="text-muted-foreground">{t("auth.invite.validating")}</p>
           </CardContent>
         </Card>
       </div>
@@ -128,10 +138,10 @@ export default function AcceptInvite() {
         <Card className="w-full max-w-md mx-4">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <XCircle className="h-16 w-16 text-destructive mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Convite Inválido</h2>
+            <h2 className="text-xl font-semibold mb-2">{t("auth.invite.invalidTitle")}</h2>
             <p className="text-muted-foreground text-center mb-6">{error}</p>
             <Link to="/login">
-              <Button variant="brand-red">Ir para Login</Button>
+              <Button variant="brand-red">{t("auth.invite.goToLogin")}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -145,15 +155,15 @@ export default function AcceptInvite() {
         <Card className="w-full max-w-md mx-4">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Conta Criada!</h2>
+            <h2 className="text-xl font-semibold mb-2">{t("auth.invite.accountCreated")}</h2>
             <p className="text-muted-foreground text-center mb-2">
-              Sua conta foi criada com sucesso.
+              {t("auth.invite.accountCreatedDesc")}
             </p>
             <p className="text-sm text-muted-foreground mb-6">
-              Redirecionando para o login...
+              {t("auth.invite.redirecting")}
             </p>
             <Link to="/login">
-              <Button variant="brand-red">Ir para Login Agora</Button>
+              <Button variant="brand-red">{t("auth.invite.goToLoginNow")}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -171,25 +181,25 @@ export default function AcceptInvite() {
               <span className="text-2xl font-bold text-brand-red">EduCMS</span>
             </div>
           </div>
-          <CardTitle>Bem-vindo ao EduCMS!</CardTitle>
+          <CardTitle>{t("auth.invite.welcome")}</CardTitle>
           <CardDescription>
-            Complete seu cadastro para acessar a plataforma
+            {t("auth.invite.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {invite && (
             <div className="mb-6 p-4 bg-muted rounded-lg space-y-2">
               <p className="text-sm">
-                <span className="font-medium">Nome:</span> {invite.name}
+                <span className="font-medium">{t("auth.invite.name")}:</span> {invite.name}
               </p>
               <p className="text-sm">
-                <span className="font-medium">Email:</span> {invite.email}
+                <span className="font-medium">{t("auth.invite.email")}:</span> {invite.email}
               </p>
               <p className="text-sm">
-                <span className="font-medium">Série:</span> {invite.grade}
+                <span className="font-medium">{t("auth.invite.grade")}:</span> {invite.grade}
               </p>
               <p className="text-sm">
-                <span className="font-medium">Turma:</span> {invite.section}
+                <span className="font-medium">{t("auth.invite.section")}:</span> {invite.section}
               </p>
             </div>
           )}
@@ -201,12 +211,12 @@ export default function AcceptInvite() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Senha</FormLabel>
+                    <FormLabel>{t("auth.invite.password")}</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="Crie uma senha segura"
+                          placeholder={t("auth.invite.passwordPlaceholder")}
                           {...field}
                         />
                         <Button
@@ -234,12 +244,12 @@ export default function AcceptInvite() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirmar Senha</FormLabel>
+                    <FormLabel>{t("auth.invite.confirmPassword")}</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
-                          placeholder="Confirme sua senha"
+                          placeholder={t("auth.invite.confirmPlaceholder")}
                           {...field}
                         />
                         <Button
@@ -271,10 +281,10 @@ export default function AcceptInvite() {
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Criando conta...
+                    {t("auth.invite.creating")}
                   </>
                 ) : (
-                  "Criar Minha Conta"
+                  t("auth.invite.createAccount")
                 )}
               </Button>
             </form>
@@ -282,9 +292,9 @@ export default function AcceptInvite() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
-              Já tem uma conta?{" "}
+              {t("auth.invite.haveAccount")}{" "}
               <Link to="/login" className="text-brand-red hover:underline">
-                Fazer login
+                {t("auth.invite.signIn")}
               </Link>
             </p>
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap, Loader2 } from "lucide-react";
@@ -25,13 +26,14 @@ export default function OAuthConsent() {
   const [details, setDetails] = useState<AuthorizationDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     let active = true;
 
     (async () => {
       if (!authorizationId) {
-        setError("Missing authorization_id");
+        setError(t("auth.consent.missingId"));
         return;
       }
 
@@ -60,7 +62,7 @@ export default function OAuthConsent() {
     return () => {
       active = false;
     };
-  }, [authorizationId]);
+  }, [authorizationId, t]);
 
   const decide = async (approve: boolean) => {
     setBusy(true);
@@ -77,13 +79,13 @@ export default function OAuthConsent() {
     const target = data?.redirect_url ?? data?.redirect_to;
     if (!target) {
       setBusy(false);
-      setError("No redirect returned by the authorization server.");
+      setError(t("auth.consent.noRedirect"));
       return;
     }
     window.location.href = target;
   };
 
-  const clientName = details?.client?.name ?? "an app";
+  const clientName = details?.client?.name ?? t("auth.consent.anApp");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-red-light via-background to-brand-blue-light p-4">
@@ -94,24 +96,24 @@ export default function OAuthConsent() {
             <span className="font-bold text-brand-red">EduCMS</span>
           </div>
           <CardTitle>
-            {error ? "Authorization request failed" : `Connect ${clientName}`}
+            {error ? t("auth.consent.failed") : t("auth.consent.connect", { client: clientName })}
           </CardTitle>
           <CardDescription>
             {error
               ? error
               : details
-                ? `This lets ${clientName} read and manage EduCMS data as you. You can revoke access at any time.`
-                : "Loading authorization request…"}
+                ? t("auth.consent.description", { client: clientName })
+                : t("auth.consent.loading")}
           </CardDescription>
         </CardHeader>
         {!error && details && (
           <CardContent className="flex gap-2">
             <Button className="flex-1" disabled={busy} onClick={() => decide(true)}>
               {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Approve
+              {t("auth.consent.approve")}
             </Button>
             <Button className="flex-1" variant="outline" disabled={busy} onClick={() => decide(false)}>
-              Deny
+              {t("auth.consent.deny")}
             </Button>
           </CardContent>
         )}
