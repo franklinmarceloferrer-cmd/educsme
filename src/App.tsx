@@ -75,6 +75,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <Router>
+              <HreflangLinks />
               <Routes>
                 <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
