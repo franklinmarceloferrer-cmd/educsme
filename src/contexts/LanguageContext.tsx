@@ -6,6 +6,11 @@ import {
   translate,
   type Language,
 } from "@/lib/i18n";
+import {
+  LANGUAGE_QUERY_PARAM,
+  htmlLang,
+  syncAlternateLinks,
+} from "@/lib/seo/hreflang";
 
 interface LanguageContextValue {
   language: Language;
@@ -15,9 +20,15 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
-function readStoredLanguage(): Language {
+/** URL language parameter wins over the stored preference so shared links keep their language. */
+function readInitialLanguage(): Language {
   if (typeof window === "undefined") {
     return DEFAULT_LANGUAGE;
+  }
+
+  const fromUrl = new URLSearchParams(window.location.search).get(LANGUAGE_QUERY_PARAM);
+  if (isLanguage(fromUrl)) {
+    return fromUrl;
   }
 
   const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
@@ -25,15 +36,20 @@ function readStoredLanguage(): Language {
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(readStoredLanguage);
+  const [language, setLanguageState] = useState<Language>(readInitialLanguage);
 
   useEffect(() => {
     window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-    document.documentElement.lang = language === "pt" ? "pt-BR" : "en";
+    document.documentElement.lang = htmlLang(language);
+    syncAlternateLinks(window.location.pathname, language);
   }, [language]);
 
   const setLanguage = useCallback((next: Language) => {
     setLanguageState(next);
+
+    const url = new URL(window.location.href);
+    url.searchParams.set(LANGUAGE_QUERY_PARAM, next);
+    window.history.replaceState(null, "", url.toString());
   }, []);
 
   const t = useCallback(
