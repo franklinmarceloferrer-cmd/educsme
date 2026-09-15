@@ -6,6 +6,11 @@ import {
   translate,
   type Language,
 } from "@/lib/i18n";
+import {
+  LANGUAGE_QUERY_PARAM,
+  htmlLang,
+  syncAlternateLinks,
+} from "@/lib/seo/hreflang";
 
 interface LanguageContextValue {
   language: Language;
