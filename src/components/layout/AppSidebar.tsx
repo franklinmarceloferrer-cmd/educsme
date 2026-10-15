@@ -9,7 +9,8 @@ import {
   User,
   UserCog,
   GraduationCap,
-  BookOpen
+  BookOpen,
+  Brain
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -68,6 +69,11 @@ const navigation = [
     url: "/gse-resources",
     icon: GraduationCap,
     studentOnly: true,
+  },
+  {
+    title: "AI GCSE Tutor",
+    url: "/gcse-tutor",
+    icon: Brain,
   },
   {
     title: "Students",

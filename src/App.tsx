@@ -26,6 +26,7 @@ import AcceptInvite from "./pages/AcceptInvite";
 import GSEResources from "./pages/GSEResources";
 import GCSEContentManage from "./pages/GCSEContentManage";
 import GCSEStudyTopic from "./pages/GCSEStudyTopic";
+import GCSETutor from "./pages/GCSETutor";
 import NotFound from "./pages/NotFound";
 import OAuthConsent from "./pages/OAuthConsent";
 const queryClient = new QueryClient();
@@ -199,6 +200,16 @@ const App = () => (
                   <ProtectedRoute>
                     <AppLayout>
                       <GCSEStudyTopic />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/gcse-tutor"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <GCSETutor />
                     </AppLayout>
                   </ProtectedRoute>
                 }
