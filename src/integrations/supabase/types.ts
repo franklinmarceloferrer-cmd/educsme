@@ -125,6 +125,33 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_tutor_lessons: {
+        Row: {
+          created_at: string
+          id: string
+          lesson: Json
+          prompt: string
+          subject: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson: Json
+          prompt: string
+          subject?: string | null
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson?: Json
+          prompt?: string
+          subject?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_invites: {
         Row: {
           accepted_at: string | null
