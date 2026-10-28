@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Brain, Loader2 } from "lucide-react";
+import { Bookmark, BookmarkCheck, Brain, Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { SUBJECTS_TOPICS } from "@/components/gcse/StudyMaterialForm";
 
 interface PracticeQuestion {
@@ -24,6 +25,14 @@ interface Lesson {
 
 const ANY_SUBJECT = "any";
 
+interface SavedLesson {
+  id: string;
+  subject: string | null;
+  prompt: string;
+  lesson: Lesson;
+  created_at: string;
+}
+
 export default function GCSETutor() {
   const { language } = useLanguage();
   const pt = language === "pt";
@@ -33,12 +42,64 @@ export default function GCSETutor() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
+  const [saved, setSaved] = useState<SavedLesson[]>([]);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const loadSaved = useCallback(async () => {
+    const { data } = await supabase
+      .from("saved_tutor_lessons")
+      .select("id, subject, prompt, lesson, created_at")
+      .order("created_at", { ascending: false });
+    setSaved((data ?? []) as unknown as SavedLesson[]);
+  }, []);
+
+  useEffect(() => { loadSaved(); }, [loadSaved]);
+
+  const saveLesson = async () => {
+    if (!lesson) return;
+    setSaving(true);
+    const { data, error: saveError } = await supabase
+      .from("saved_tutor_lessons")
+      .insert({ prompt, subject: subject === ANY_SUBJECT ? null : subject, lesson: lesson as never })
+      .select("id")
+      .single();
+    setSaving(false);
+    if (saveError) {
+      toast.error(pt ? "Não foi possível salvar." : "Could not save the lesson.");
+      return;
+    }
+    setSavedId(data.id);
+    toast.success(pt ? "Lição salva." : "Lesson saved.");
+    loadSaved();
+  };
+
+  const openSaved = (s: SavedLesson) => {
+    setLesson(s.lesson);
+    setPrompt(s.prompt);
+    setSubject(s.subject ?? ANY_SUBJECT);
+    setSavedId(s.id);
+    setRevealed({});
+    setError(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteSaved = async (id: string) => {
+    const { error: delError } = await supabase.from("saved_tutor_lessons").delete().eq("id", id);
+    if (delError) {
+      toast.error(pt ? "Não foi possível excluir." : "Could not delete.");
+      return;
+    }
+    if (savedId === id) setSavedId(null);
+    setSaved((list) => list.filter((s) => s.id !== id));
+  };
 
   const generate = async () => {
     if (!prompt.trim()) return;
     setLoading(true);
     setError(null);
     setRevealed({});
+    setSavedId(null);
     const { data, error: fnError } = await supabase.functions.invoke("gcse-tutor", {
       body: { prompt, subject: subject === ANY_SUBJECT ? "" : subject, language },
     });
