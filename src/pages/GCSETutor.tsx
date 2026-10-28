@@ -159,7 +159,13 @@ export default function GCSETutor() {
       {lesson && !loading && (
         <>
           <Card>
-            <CardHeader><CardTitle>{lesson.title}</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
+              <CardTitle>{lesson.title}</CardTitle>
+              <Button variant="outline" size="sm" onClick={saveLesson} disabled={saving || !!savedId}>
+                {savedId ? <BookmarkCheck className="h-4 w-4 mr-2" /> : <Bookmark className="h-4 w-4 mr-2" />}
+                {savedId ? (pt ? "Salva" : "Saved") : (pt ? "Salvar" : "Save")}
+              </Button>
+            </CardHeader>
             <CardContent className="space-y-4">
               <p className="whitespace-pre-line leading-relaxed">{lesson.explanation}</p>
               <div>
@@ -192,6 +198,37 @@ export default function GCSETutor() {
           </Card>
         </>
       )}
+
+      <Card>
+        <CardHeader><CardTitle>{pt ? "Lições salvas" : "Saved lessons"}</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {saved.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {pt ? "Nenhuma lição salva ainda." : "No saved lessons yet."}
+            </p>
+          ) : (
+            saved.map((s) => (
+              <div key={s.id} className="flex items-center justify-between gap-2 rounded-md border p-3">
+                <button className="text-left flex-1 min-w-0" onClick={() => openSaved(s)}>
+                  <p className="font-medium truncate">{s.lesson.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {s.subject ? `${s.subject} · ` : ""}
+                    {new Date(s.created_at).toLocaleDateString(pt ? "pt-BR" : "en-GB")}
+                  </p>
+                </button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={pt ? "Excluir" : "Delete"}
+                  onClick={() => deleteSaved(s.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
