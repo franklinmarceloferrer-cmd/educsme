@@ -130,6 +130,7 @@ export type Database = {
           created_at: string
           id: string
           lesson: Json
+          progress: Json
           prompt: string
           subject: string | null
           user_id: string
@@ -138,6 +139,7 @@ export type Database = {
           created_at?: string
           id?: string
           lesson: Json
+          progress?: Json
           prompt: string
           subject?: string | null
           user_id?: string
@@ -146,6 +148,7 @@ export type Database = {
           created_at?: string
           id?: string
           lesson?: Json
+          progress?: Json
           prompt?: string
           subject?: string | null
           user_id?: string
