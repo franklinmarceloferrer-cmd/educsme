@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bookmark, BookmarkCheck, Brain, Loader2, Trash2 } from "lucide-react";
+import { Bookmark, BookmarkCheck, Brain, Check, Loader2, RotateCcw, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { SUBJECTS_TOPICS } from "@/components/gcse/StudyMaterialForm";
 
@@ -25,13 +25,19 @@ interface Lesson {
 
 const ANY_SUBJECT = "any";
 
+const countMissed = (p: Record<string, string>) => Object.values(p).filter((v) => v === "missed").length;
+
 interface SavedLesson {
   id: string;
   subject: string | null;
   prompt: string;
   lesson: Lesson;
+  progress: Progress;
   created_at: string;
 }
+
+type QuestionStatus = "correct" | "missed";
+type Progress = Record<string, QuestionStatus>;
 
 export default function GCSETutor() {
   const { language } = useLanguage();
@@ -45,11 +51,13 @@ export default function GCSETutor() {
   const [saved, setSaved] = useState<SavedLesson[]>([]);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [progress, setProgress] = useState<Progress>({});
+  const [onlyMissed, setOnlyMissed] = useState(false);
 
   const loadSaved = useCallback(async () => {
     const { data } = await supabase
       .from("saved_tutor_lessons")
-      .select("id, subject, prompt, lesson, created_at")
+      .select("id, subject, prompt, lesson, progress, created_at")
       .order("created_at", { ascending: false });
     setSaved((data ?? []) as unknown as SavedLesson[]);
   }, []);
@@ -61,7 +69,7 @@ export default function GCSETutor() {
     setSaving(true);
     const { data, error: saveError } = await supabase
       .from("saved_tutor_lessons")
-      .insert({ prompt, subject: subject === ANY_SUBJECT ? null : subject, lesson: lesson as never })
+      .insert({ prompt, subject: subject === ANY_SUBJECT ? null : subject, lesson: lesson as never, progress: progress as never })
       .select("id")
       .single();
     setSaving(false);
@@ -80,8 +88,27 @@ export default function GCSETutor() {
     setSubject(s.subject ?? ANY_SUBJECT);
     setSavedId(s.id);
     setRevealed({});
+    setProgress(s.progress ?? {});
+    setOnlyMissed(false);
     setError(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const markQuestion = async (index: number, status: QuestionStatus) => {
+    const next: Progress = { ...progress };
+    if (next[index] === status) delete next[index];
+    else next[index] = status;
+    setProgress(next);
+    if (!savedId) return;
+    const { error: updError } = await supabase
+      .from("saved_tutor_lessons")
+      .update({ progress: next as never })
+      .eq("id", savedId);
+    if (updError) {
+      toast.error(pt ? "Não foi possível salvar o progresso." : "Could not save progress.");
+      return;
+    }
+    setSaved((list) => list.map((s) => (s.id === savedId ? { ...s, progress: next } : s)));
   };
 
   const deleteSaved = async (id: string) => {
@@ -100,6 +127,8 @@ export default function GCSETutor() {
     setError(null);
     setRevealed({});
     setSavedId(null);
+    setProgress({});
+    setOnlyMissed(false);
     const { data, error: fnError } = await supabase.functions.invoke("gcse-tutor", {
       body: { prompt, subject: subject === ANY_SUBJECT ? "" : subject, language },
     });
@@ -177,9 +206,24 @@ export default function GCSETutor() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardTitle>{pt ? "Questões de prática" : "Practice questions"}</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 flex-wrap">
+              <div>
+                <CardTitle>{pt ? "Questões de prática" : "Practice questions"}</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {pt
+                    ? `${Object.keys(progress).length} de ${lesson.questions.length} concluídas · ${countMissed(progress)} erradas`
+                    : `${Object.keys(progress).length} of ${lesson.questions.length} completed · ${countMissed(progress)} missed`}
+                </p>
+              </div>
+              {countMissed(progress) > 0 && (
+                <Button variant={onlyMissed ? "default" : "outline"} size="sm" onClick={() => setOnlyMissed((v) => !v)}>
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  {onlyMissed ? (pt ? "Mostrar todas" : "Show all") : (pt ? "Rever erradas" : "Review missed")}
+                </Button>
+              )}
+            </CardHeader>
             <CardContent className="space-y-4">
-              {lesson.questions.map((q, i) => (
+              {lesson.questions.map((q, i) => (onlyMissed && progress[i] !== "missed") ? null : (
                 <div key={i} className="rounded-md border p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-medium whitespace-pre-line">{i + 1}. {q.question}</p>
@@ -192,6 +236,22 @@ export default function GCSETutor() {
                       {pt ? "Mostrar resposta" : "Show answer"}
                     </Button>
                   )}
+                  <div className="flex gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      variant={progress[i] === "correct" ? "default" : "outline"}
+                      onClick={() => markQuestion(i, "correct")}
+                    >
+                      <Check className="h-4 w-4 mr-1" />{pt ? "Acertei" : "Got it"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={progress[i] === "missed" ? "destructive" : "outline"}
+                      onClick={() => markQuestion(i, "missed")}
+                    >
+                      <X className="h-4 w-4 mr-1" />{pt ? "Errei" : "Missed"}
+                    </Button>
+                  </div>
                 </div>
               ))}
             </CardContent>
@@ -214,6 +274,8 @@ export default function GCSETutor() {
                   <p className="text-xs text-muted-foreground truncate">
                     {s.subject ? `${s.subject} · ` : ""}
                     {new Date(s.created_at).toLocaleDateString(pt ? "pt-BR" : "en-GB")}
+                    {` · ${Object.keys(s.progress ?? {}).length}/${s.lesson.questions.length} ${pt ? "concluídas" : "done"}`}
+                    {countMissed(s.progress ?? {}) > 0 && ` · ${countMissed(s.progress ?? {})} ${pt ? "erradas" : "missed"}`}
                   </p>
                 </button>
                 <Button
