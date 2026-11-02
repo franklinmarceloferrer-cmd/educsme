@@ -11,6 +11,7 @@ import { ptBR } from "date-fns/locale";
 import { GSEExamCard } from "./GSEExamCard";
 import { fileStorage } from "@/lib/fileStorage";
 import { toast } from "sonner";
+import { TutorProgressSummary } from "./TutorProgressSummary";
 
 // Strip bucket prefix from stored path (e.g. "documents/file.pdf" → "file.pdf")
 function getStoragePath(fileUrl: string): string {
@@ -178,6 +179,8 @@ export function StudentDashboard() {
           Confira as últimas novidades da escola.
         </p>
       </div>
+
+      <TutorProgressSummary />
 
       {/* Urgent Announcements Banner */}
       <UrgentAnnouncementsBanner announcements={urgentAnnouncements} />

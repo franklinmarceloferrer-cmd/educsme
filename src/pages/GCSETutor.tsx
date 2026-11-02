@@ -9,6 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Bookmark, BookmarkCheck, Brain, Check, Loader2, RotateCcw, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { SUBJECTS_TOPICS } from "@/components/gcse/StudyMaterialForm";
+import { useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PracticeQuestion {
   question: string;
@@ -41,6 +44,9 @@ type Progress = Record<string, QuestionStatus>;
 
 export default function GCSETutor() {
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const pt = language === "pt";
   const [subject, setSubject] = useState(ANY_SUBJECT);
   const [prompt, setPrompt] = useState("");
@@ -55,14 +61,53 @@ export default function GCSETutor() {
   const [onlyMissed, setOnlyMissed] = useState(false);
 
   const loadSaved = useCallback(async () => {
+    if (!user) return;
     const { data } = await supabase
       .from("saved_tutor_lessons")
       .select("id, subject, prompt, lesson, progress, created_at")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     setSaved((data ?? []) as unknown as SavedLesson[]);
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => { loadSaved(); }, [loadSaved]);
+
+  useEffect(() => {
+    const lessonId = searchParams.get("lesson");
+    if (!lessonId || !user) return;
+    let cancelled = false;
+    const reviewMissed = searchParams.get("review") === "missed";
+    const openLinkedLesson = async () => {
+      const { data, error: linkedError } = await supabase.from("saved_tutor_lessons")
+        .select("id, subject, prompt, lesson, progress, created_at")
+        .eq("id", lessonId).eq("user_id", user.id).single();
+      if (cancelled) return;
+      if (linkedError || !data) {
+        setError(pt ? "Não foi possível abrir esta lição salva." : "Could not open this saved lesson.");
+        return;
+      }
+      const linked = data as unknown as SavedLesson;
+      setLesson(linked.lesson);
+      setPrompt(linked.prompt);
+      setSubject(linked.subject ?? ANY_SUBJECT);
+      setSavedId(linked.id);
+      setProgress(linked.progress ?? {});
+      setRevealed({});
+      setOnlyMissed(reviewMissed);
+      setError(null);
+    };
+    openLinkedLesson();
+    return () => { cancelled = true; };
+  }, [searchParams, user?.id, pt]);
+
+  const refreshDashboard = () => queryClient.invalidateQueries({ queryKey: ["tutor-progress", user?.id] });
+  const clearLessonLink = () => {
+    if (!searchParams.has("lesson")) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete("lesson");
+    next.delete("review");
+    setSearchParams(next, { replace: true });
+  };
 
   const saveLesson = async () => {
     if (!lesson) return;
@@ -78,11 +123,13 @@ export default function GCSETutor() {
       return;
     }
     setSavedId(data.id);
+    refreshDashboard();
     toast.success(pt ? "Lição salva." : "Lesson saved.");
     loadSaved();
   };
 
   const openSaved = (s: SavedLesson) => {
+    clearLessonLink();
     setLesson(s.lesson);
     setPrompt(s.prompt);
     setSubject(s.subject ?? ANY_SUBJECT);
@@ -105,10 +152,12 @@ export default function GCSETutor() {
       .update({ progress: next as never })
       .eq("id", savedId);
     if (updError) {
+      setProgress(progress);
       toast.error(pt ? "Não foi possível salvar o progresso." : "Could not save progress.");
       return;
     }
     setSaved((list) => list.map((s) => (s.id === savedId ? { ...s, progress: next } : s)));
+    refreshDashboard();
   };
 
   const deleteSaved = async (id: string) => {
@@ -119,10 +168,13 @@ export default function GCSETutor() {
     }
     if (savedId === id) setSavedId(null);
     setSaved((list) => list.filter((s) => s.id !== id));
+    clearLessonLink();
+    refreshDashboard();
   };
 
   const generate = async () => {
     if (!prompt.trim()) return;
+    clearLessonLink();
     setLoading(true);
     setError(null);
     setRevealed({});
