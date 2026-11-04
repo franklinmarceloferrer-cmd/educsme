@@ -42,6 +42,10 @@ export const dashboard: LocaleModule = {
     "tutorProgress.error": "Could not load your lesson progress.",
     "tutorProgress.retry": "Try again",
     "tutorProgress.loading": "Loading lesson progress…",
+    "tutorProgress.bySubject": "Practice by subject",
+    "tutorProgress.subject": "Subject",
+    "tutorProgress.unspecifiedSubject": "Any subject",
+    "tutorProgress.needsReview": "Needs review",
 
     "gse.title": "GCSE Exams 2026",
     "gse.description": "Official Ofqual guidance",
@@ -94,6 +98,10 @@ export const dashboard: LocaleModule = {
     "tutorProgress.error": "Não foi possível carregar o progresso das suas lições.",
     "tutorProgress.retry": "Tentar novamente",
     "tutorProgress.loading": "Carregando progresso das lições…",
+    "tutorProgress.bySubject": "Prática por disciplina",
+    "tutorProgress.subject": "Disciplina",
+    "tutorProgress.unspecifiedSubject": "Qualquer disciplina",
+    "tutorProgress.needsReview": "Precisa de revisão",
 
     "gse.title": "Exames GCSE 2026",
     "gse.description": "Orientações oficiais do Ofqual",

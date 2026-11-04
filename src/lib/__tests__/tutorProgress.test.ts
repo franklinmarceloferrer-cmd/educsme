@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 import { supabase } from "@/integrations/supabase/client";
-import { loadTutorProgress, summarizeLesson, totalTutorProgress } from "../tutorProgress";
+import { loadTutorProgress, summarizeLesson, summarizeTutorSubjects, totalTutorProgress } from "../tutorProgress";
 
 const row = (id: string, progress: Record<string, string>) => ({
     id, subject: "Maths", prompt: "Algebra",
@@ -10,6 +10,43 @@ const row = (id: string, progress: Record<string, string>) => ({
 });
 
 describe("saved tutor progress", () => {
+    it("aggregates completed and missed questions separately for each subject", () => {
+        const lessons = [
+            summarizeLesson(row("math-one", { 0: "correct", 1: "missed" })),
+            summarizeLesson(row("math-two", { 0: "missed", 2: "correct" })),
+            summarizeLesson({ ...row("bio", { 0: "correct" }), subject: "Biology" }),
+        ];
+        expect(summarizeTutorSubjects(lessons)).toEqual([
+            { subject: "Maths", total: 6, completed: 4, correct: 2, missed: 2, remaining: 2 },
+            { subject: "Biology", total: 3, completed: 1, correct: 1, missed: 0, remaining: 2 },
+        ]);
+    });
+
+    it("places subjects with the most missed questions first", () => {
+        expect(summarizeTutorSubjects([
+            summarizeLesson({ ...row("bio", { 0: "missed" }), subject: "Biology" }),
+            summarizeLesson(row("math", { 0: "missed", 1: "missed" })),
+        ]).map((subject) => subject.subject)).toEqual(["Maths", "Biology"]);
+    });
+
+    it("groups unspecified subjects together and normalizes whitespace and casing", () => {
+        expect(summarizeTutorSubjects([
+            summarizeLesson({ ...row("one", { 0: "missed" }), subject: null }),
+            summarizeLesson({ ...row("two", { 0: "correct" }), subject: "  " }),
+            summarizeLesson(row("three", { 0: "correct" })),
+            summarizeLesson({ ...row("four", { 0: "correct" }), subject: " maths " }),
+        ])).toEqual([
+            { subject: null, total: 6, completed: 2, correct: 1, missed: 1, remaining: 4 },
+            { subject: "Maths", total: 6, completed: 2, correct: 2, missed: 0, remaining: 4 },
+        ]);
+    });
+
+    it("does not include stale question marks in subject totals", () => {
+        expect(summarizeTutorSubjects([summarizeLesson(row("one", { 0: "correct", 9: "missed" }))]))
+            .toEqual([{ subject: "Maths", total: 3, completed: 1, correct: 1, missed: 0, remaining: 2 }]);
+        expect(summarizeTutorSubjects([])).toEqual([]);
+    });
+
     it("counts both correct and missed questions as completed across all lessons", () => {
         const result = totalTutorProgress([
             summarizeLesson(row("one", { 0: "correct", 1: "missed" })),

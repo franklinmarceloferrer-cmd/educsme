@@ -4,7 +4,7 @@ import { ArrowRight, BookOpen, CheckCheck, CircleCheck, RotateCcw, CircleDashed 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { loadTutorProgress, totalTutorProgress } from "@/lib/tutorProgress";
+import { loadTutorProgress, summarizeTutorSubjects, totalTutorProgress } from "@/lib/tutorProgress";
 
 export function TutorProgressSummary() {
     const { user } = useAuth();
@@ -16,6 +16,7 @@ export function TutorProgressSummary() {
         staleTime: 0,
     });
     const totals = totalTutorProgress(lessons);
+    const subjects = summarizeTutorSubjects(lessons);
     const tutorLink = `/gcse-tutor?lang=${language}`;
     const stats = [
         { key: "saved", value: lessons.length, icon: BookOpen, color: "text-primary" },
@@ -56,6 +57,34 @@ export function TutorProgressSummary() {
                         <p className="text-sm text-muted-foreground py-4">{t("tutorProgress.empty")}</p>
                     ) : (
                         <>
+                            <section aria-labelledby="tutor-subject-title" className="space-y-3 pt-3">
+                                <h3 id="tutor-subject-title" className="text-lg font-semibold">{t("tutorProgress.bySubject")}</h3>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead className="border-b border-border text-muted-foreground">
+                                            <tr>
+                                                <th scope="col" className="py-3 pr-4 text-left font-medium">{t("tutorProgress.subject")}</th>
+                                                <th scope="col" className="px-3 py-3 text-right font-medium">{t("tutorProgress.completed")}</th>
+                                                <th scope="col" className="px-3 py-3 text-right font-medium">{t("tutorProgress.missed")}</th>
+                                                <th scope="col" className="py-3 pl-3 text-right font-medium">{t("tutorProgress.remaining")}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border">
+                                            {subjects.map((subject) => (
+                                                <tr key={subject.subject ?? ""}>
+                                                    <th scope="row" className="py-4 pr-4 text-left font-medium">
+                                                        <span className="break-words">{subject.subject ?? t("tutorProgress.unspecifiedSubject")}</span>
+                                                        {subject.missed > 0 && <span className="mt-1 flex items-center gap-1 text-xs font-normal text-destructive"><RotateCcw className="h-3 w-3 shrink-0" />{t("tutorProgress.needsReview")}</span>}
+                                                    </th>
+                                                    <td className="px-3 py-4 text-right tabular-nums">{subject.completed} / {subject.total}</td>
+                                                    <td className={`px-3 py-4 text-right tabular-nums ${subject.missed > 0 ? "font-semibold text-destructive" : "text-muted-foreground"}`}>{subject.missed}</td>
+                                                    <td className="py-4 pl-3 text-right tabular-nums text-muted-foreground">{subject.remaining}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
                             <p className="text-sm text-muted-foreground">{t("tutorProgress.count", totals)}</p>
                             <ul className="divide-y divide-border">
                                 {lessons.map((lesson) => (

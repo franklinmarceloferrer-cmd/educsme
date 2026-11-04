@@ -57,6 +57,34 @@ export function totalTutorProgress(lessons: TutorLessonSummary[]) {
     }), { total: 0, completed: 0, correct: 0, missed: 0, remaining: 0 });
 }
 
+export interface TutorSubjectSummary {
+    subject: string | null;
+    total: number;
+    completed: number;
+    correct: number;
+    missed: number;
+    remaining: number;
+}
+
+export function summarizeTutorSubjects(lessons: TutorLessonSummary[]): TutorSubjectSummary[] {
+    const subjects = new Map<string, TutorSubjectSummary>();
+    for (const lesson of lessons) {
+        const subject = lesson.subject?.trim() || null;
+        const key = subject?.toLowerCase() || "";
+        const summary = subjects.get(key) ?? {
+            subject, total: 0, completed: 0, correct: 0, missed: 0, remaining: 0,
+        };
+        summary.total += lesson.total;
+        summary.completed += lesson.completed;
+        summary.correct += lesson.correct;
+        summary.missed += lesson.missed;
+        summary.remaining += lesson.remaining;
+        subjects.set(key, summary);
+    }
+    return [...subjects.values()].sort((a, b) =>
+        b.missed - a.missed || (a.subject ?? "").localeCompare(b.subject ?? ""));
+}
+
 export async function loadTutorProgress(userId: string): Promise<TutorLessonSummary[]> {
     const summaries: TutorLessonSummary[] = [];
     const PAGE_SIZE = 500;
