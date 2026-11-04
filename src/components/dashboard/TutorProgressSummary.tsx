@@ -17,6 +17,12 @@ export function TutorProgressSummary() {
     });
     const totals = totalTutorProgress(lessons);
     const subjects = summarizeTutorSubjects(lessons);
+    const subjectLabel = (subject: string | null) => {
+        if (!subject) return t("tutorProgress.unspecifiedSubject");
+        const key = `tutorProgress.subject.${subject}`;
+        const translated = t(key);
+        return translated === key ? subject : translated;
+    };
     const tutorLink = `/gcse-tutor?lang=${language}`;
     const stats = [
         { key: "saved", value: lessons.length, icon: BookOpen, color: "text-primary" },
@@ -73,7 +79,7 @@ export function TutorProgressSummary() {
                                             {subjects.map((subject) => (
                                                 <tr key={subject.subject ?? ""}>
                                                     <th scope="row" className="py-4 pr-4 text-left font-medium">
-                                                        <span className="break-words">{subject.subject ?? t("tutorProgress.unspecifiedSubject")}</span>
+                                                        <span className="break-words">{subjectLabel(subject.subject)}</span>
                                                         {subject.missed > 0 && <span className="mt-1 flex items-center gap-1 text-xs font-normal text-destructive"><RotateCcw className="h-3 w-3 shrink-0" />{t("tutorProgress.needsReview")}</span>}
                                                     </th>
                                                     <td className="px-3 py-4 text-right tabular-nums">{subject.completed} / {subject.total}</td>
