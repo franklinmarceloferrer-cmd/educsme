@@ -15,6 +15,13 @@
       "when": 1793264300106,
       "tag": "0001_add_tutor_lesson_progress",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794572220568,
+      "tag": "0002_scope_study_materials_read",
+      "breakpoints": true
     }
   ]
 }
