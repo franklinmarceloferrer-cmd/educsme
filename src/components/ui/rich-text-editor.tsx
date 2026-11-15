@@ -1,4 +1,5 @@
 import { useEditor, EditorContent } from '@tiptap/react';
+import { useEffect } from 'react';
 import StarterKit from '@tiptap/starter-kit';
 import { Button } from '@/components/ui/button';
 import { 
@@ -58,6 +59,12 @@ export function RichTextEditor({
       },
     },
   });
+
+  useEffect(() => {
+    if (editor && editor.getHTML() !== content) {
+      editor.commands.setContent(content, { emitUpdate: false });
+    }
+  }, [editor, content]);
 
   if (!editor) {
     return null;
@@ -188,7 +195,7 @@ export function RichTextEditor({
 
       {/* Placeholder */}
       {editor.isEmpty && (
-        <div className="absolute top-[60px] left-6 text-muted-foreground pointer-events-none">
+        <div className="px-3 pb-3 text-sm text-muted-foreground pointer-events-none">
           {placeholder}
         </div>
       )}

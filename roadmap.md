@@ -1,8 +1,8 @@
 # Student tutor progress dashboard
 
 ## Firecrawl teaching materials
-- [ ] Add authenticated URL import and review before saving existing or new materials.
-- [ ] Test input safety and verify import/save through the signed-in application.
+- [x] Add authenticated URL import and review before saving existing or new materials.
+- [x] Test input safety (5 tests) and verify real import, save, reopen, attribution and deletion through a signed-in teacher account; mobile form has no horizontal overflow.
 
 - [x] Add bilingual completed and missed question totals by subject, with review priorities.
 - [x] Test subject aggregation (10 tests passed; preview build OK).
