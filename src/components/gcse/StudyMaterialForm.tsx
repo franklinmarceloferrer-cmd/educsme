@@ -8,6 +8,9 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import DOMPurify from "dompurify";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { StudyMaterialImport } from "./StudyMaterialImport";
 
 const SUBJECTS_TOPICS: Record<string, string[]> = {
   "Mathematics": ["Number & Algebra", "Geometry & Measures", "Statistics & Probability", "Ratio & Proportion"],
@@ -36,6 +39,8 @@ interface StudyMaterialFormProps {
 
 export function StudyMaterialForm({ open, onOpenChange, material, onSuccess }: StudyMaterialFormProps) {
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const [editorRevision, setEditorRevision] = useState(0);
   const [loading, setLoading] = useState(false);
   const [subject, setSubject] = useState("");
   const [topic, setTopic] = useState("");
@@ -64,24 +69,23 @@ export function StudyMaterialForm({ open, onOpenChange, material, onSuccess }: S
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!subject || !topic || !title.trim()) {
-      toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
+      toast({ title: t("gcse.form.required"), variant: "destructive" });
       return;
     }
 
     setLoading(true);
     try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .single();
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError || !auth.user) throw new Error("Authentication required");
+      const safeContent = DOMPurify.sanitize(content);
 
       if (material) {
         const { error } = await supabase
           .from("study_materials")
-          .update({ subject, topic, title: title.trim(), content, order_index: orderIndex })
+          .update({ subject, topic, title: title.trim(), content: safeContent, order_index: orderIndex })
           .eq("id", material.id);
         if (error) throw error;
-        toast({ title: "Conteúdo atualizado com sucesso!" });
+        toast({ title: t("gcse.form.updated") });
       } else {
         const { error } = await supabase
           .from("study_materials")
@@ -89,17 +93,17 @@ export function StudyMaterialForm({ open, onOpenChange, material, onSuccess }: S
             subject,
             topic,
             title: title.trim(),
-            content,
+            content: safeContent,
             order_index: orderIndex,
-            created_by: profile?.user_id,
+            created_by: auth.user.id,
           });
         if (error) throw error;
-        toast({ title: "Conteúdo criado com sucesso!" });
+        toast({ title: t("gcse.form.created") });
       }
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      toast({ title: "Erro ao salvar conteúdo", description: error.message, variant: "destructive" });
+      toast({ title: t("gcse.form.error"), description: error.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -109,14 +113,19 @@ export function StudyMaterialForm({ open, onOpenChange, material, onSuccess }: S
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{material ? "Editar Conteúdo" : "Novo Conteúdo de Estudo"}</DialogTitle>
+          <DialogTitle>{t(material ? "gcse.form.edit" : "gcse.form.new")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {open && <StudyMaterialImport key={material?.id || "new"} disabled={loading} hasContent={Boolean(content.trim())} onApply={(importTitle, html) => {
+            if (!title.trim()) setTitle(importTitle);
+            setContent(html);
+            setEditorRevision((revision) => revision + 1);
+          }} />}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Matéria *</Label>
+              <Label>{t("gcse.form.subject")} *</Label>
               <Select value={subject} onValueChange={(v) => { setSubject(v); setTopic(""); }}>
-                <SelectTrigger><SelectValue placeholder="Selecione a matéria" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("gcse.form.selectSubject")} /></SelectTrigger>
                 <SelectContent>
                   {Object.keys(SUBJECTS_TOPICS).map((s) => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
@@ -125,9 +134,9 @@ export function StudyMaterialForm({ open, onOpenChange, material, onSuccess }: S
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Tópico *</Label>
+              <Label>{t("gcse.form.topic")} *</Label>
               <Select value={topic} onValueChange={setTopic} disabled={!subject}>
-                <SelectTrigger><SelectValue placeholder="Selecione o tópico" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("gcse.form.selectTopic")} /></SelectTrigger>
                 <SelectContent>
                   {availableTopics.map((t) => (
                     <SelectItem key={t} value={t}>{t}</SelectItem>
@@ -139,25 +148,25 @@ export function StudyMaterialForm({ open, onOpenChange, material, onSuccess }: S
 
           <div className="grid gap-4 md:grid-cols-[1fr_120px]">
             <div className="space-y-2">
-              <Label>Título *</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Introdução à Álgebra" />
+              <Label>{t("gcse.form.title")} *</Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("gcse.form.titlePlaceholder")} />
             </div>
             <div className="space-y-2">
-              <Label>Ordem</Label>
+              <Label>{t("gcse.form.order")}</Label>
               <Input type="number" value={orderIndex} onChange={(e) => setOrderIndex(Number(e.target.value))} min={0} />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Conteúdo</Label>
-            <RichTextEditor content={content} onChange={setContent} placeholder="Escreva o conteúdo de estudo aqui..." />
+            <Label>{t("gcse.form.content")}</Label>
+            <RichTextEditor key={`${material?.id || "new"}-${editorRevision}`} content={content} onChange={setContent} placeholder={t("gcse.form.contentPlaceholder")} />
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("gcse.form.cancel")}</Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {material ? "Salvar Alterações" : "Criar Conteúdo"}
+              {t(material ? "gcse.form.save" : "gcse.form.create")}
             </Button>
           </div>
         </form>
