@@ -195,7 +195,7 @@ export function RichTextEditor({
 
       {/* Placeholder */}
       {editor.isEmpty && (
-        <div className="absolute top-[60px] left-6 text-muted-foreground pointer-events-none">
+        <div className="px-3 pb-3 text-sm text-muted-foreground pointer-events-none">
           {placeholder}
         </div>
       )}
